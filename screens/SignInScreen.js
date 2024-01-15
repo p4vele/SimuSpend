@@ -1,0 +1,92 @@
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { Input, Button } from 'react-native-elements';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+
+const auth = getAuth();
+
+const SignInScreen = ({ navigation }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [validationMessage, setValidationMessage] = useState('');
+
+  async function login() {
+    if (email === '' || password === '') {
+      setValidationMessage('required filled missing');
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      setValidationMessage(error.message);
+    }
+  }
+
+  return (
+    <View style={styles.container}>
+      <Image source={require('../assets/logo.png')} style={styles.logo} />
+      <Input
+        placeholder='Email'
+        containerStyle={styles.inputContainer}
+        value={email}
+        onChangeText={(text) => setEmail(text)}
+        leftIcon={<Icon name='envelope' size={16} />}
+      />
+
+      <Input
+        placeholder='Password'
+        containerStyle={styles.inputContainer}
+        value={password}
+        onChangeText={(text) => setPassword(text)}
+        secureTextEntry={true}
+        leftIcon={<Icon name='key' size={16} />}
+      />
+      {<Text style={styles.error}>{validationMessage}</Text>}
+
+      <Button title="Sign in" buttonStyle={styles.button} onPress={login} />
+      <Text style={styles.signUpText}>
+        Don't have an account yet ?
+        <TouchableOpacity onPress={() => navigation.navigate('Sign Up')} style={styles.signUpLink}>
+          <Text>Sign up here</Text>
+        </TouchableOpacity>
+      </Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    alignSelf: 'center',
+  },
+  inputContainer: {
+    marginTop: 10,
+    width: '80%', // Adjust the width as needed
+  },
+  button: {
+    marginTop: 10,
+  },
+  error: {
+    marginTop: 10,
+    color: 'red',
+  },
+  signUpText: {
+    marginTop: 5,
+    fontSize: 17,
+  },
+  signUpLink: {
+    color: 'blue',
+    marginLeft: 10,
+  },
+});
+
+export default SignInScreen;
