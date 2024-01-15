@@ -26,7 +26,7 @@ const SignInScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Image source={require('../assets/logo.png')} style={styles.logo} />
+      <Image source={require('../assets/logo.png')}   style={{width: 150, height: 150, alignSelf: 'center', resizeMode: 'contain'}} />
       <Input
         placeholder='Email'
         containerStyle={styles.inputContainer}
@@ -48,8 +48,8 @@ const SignInScreen = ({ navigation }) => {
       <Button title="Sign in" buttonStyle={styles.button} onPress={login} />
       <Text style={styles.signUpText}>
         Don't have an account yet ?
-        <TouchableOpacity onPress={() => navigation.navigate('Sign Up')} style={styles.signUpLink}>
-          <Text>Sign up here</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Sign Up')} >
+          <Text style={styles.signUpLink}>Sign up here</Text>
         </TouchableOpacity>
       </Text>
     </View>
@@ -82,10 +82,13 @@ const styles = StyleSheet.create({
   signUpText: {
     marginTop: 5,
     fontSize: 17,
+    textAlign: 'center',
   },
   signUpLink: {
-    color: 'blue',
-    marginLeft: 10,
+    marginTop: 5,
+     fontSize: 17,
+      textAlign: 'center',
+       color: 'blue' ,
   },
 });
 

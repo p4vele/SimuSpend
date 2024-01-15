@@ -34,43 +34,46 @@ function checkPassword(firstpassword,secondpassword) {
   }
   return (
     <View style={styles.container}>
+      <Image source={require('../assets/logo.png')} style={{width: 150, height: 150, alignSelf: 'center', resizeMode: 'contain'}} />
+  
+      <Input
+        placeholder='Email'
+        containerStyle={{marginTop: 10, width: '80%'}}
+        value={email}
+        onChangeText={(text) => setEmail(text)}
+        leftIcon={<Icon name='envelope' size={16} />}
+      />
+  
+      <Input
+        placeholder='Password'
+        containerStyle={{marginTop: 10, width: '80%'}}
+        value={password}
+        onChangeText={(value) => validateAndSet(value, setPassword)}
+        secureTextEntry
+        leftIcon={<Icon name='key' size={16} />}
+      />
+  
+      <Input
+        placeholder='Confirm password'
+        containerStyle={{marginTop: 10, width: '80%'}}
+        value={confirmPassword}
+        onChangeText={(value) => validateAndSet(value, setConfirmPassword)}
+        secureTextEntry
+        leftIcon={<Icon name='key' size={16} />}
+        onBlur={() => checkPassword(password, confirmPassword)}
+      />
+  
+      {<Text style={styles.error}>{validationMessage}</Text>}
+  
+      <Button title="Sign up" buttonStyle={{marginTop: 10}} onPress={createAccount} />
+  
       <View>
-      <Image source={require('../assets/logo.png')} style={{width:150,height:150,alignSelf:'center'}}/>
-        <Input
-          placeholder='Email'
-          containerStyle={{marginTop: 10}}
-          value={email}
-          onChangeText={(text) => setEmail(text)}
-          leftIcon={<Icon name='envelope' size={16}/>}
-            />
-        <Input
-          placeholder='Password'
-          containerStyle={{marginTop:10}}
-          value={password}
-          onChangeText={(value) => validateAndSet(value, setPassword)}
-          secureTextEntry
-          leftIcon={<Icon name='key' size={16}/>}
-          
-
-            />
-        <Input
-          placeholder='confirm password'
-          containerStyle={{marginTop:10}}
-          value={confirmPassword}
-          onChangeText={(value) => validateAndSet(value,setConfirmPassword)}
-          secureTextEntry
-          leftIcon={<Icon name='key' size={16}/>}
-          onBlur={()=>checkPassword(password,confirmPassword)}
-            />  
-            {<Text style={styles.error}>{validationMessage}</Text>}
-        <Button title="Sign up" buttonStyle={{marginTop:10}} onPress={createAccount} />
-        <View>
-          <Text style={{marginTop:5,fontSize:17}}>Already have an account?
-          <TouchableOpacity onPress={()=>navigation.navigate('Sign In')} style={{color:'blue',marginLeft:10}}>
-               <Text>Login here </Text> 
+        <Text style={{marginTop: 5, fontSize: 17}}>
+          Already have an account?
+          <TouchableOpacity onPress={() => navigation.navigate('Sign In')} style={{color: 'blue', marginLeft: 10}}>
+            <Text style={ {marginTop: 5,fontSize: 17,textAlign: 'center',color: 'blue' }}>Login here </Text>
           </TouchableOpacity>
-          </Text>
-        </View>
+        </Text>
       </View>
     </View>
   );
@@ -83,7 +86,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    bottom:50,
+    
   },
   error: {
     marginTop: 10,
