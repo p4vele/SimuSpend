@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TextInput, Image, Modal, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Modal, TouchableOpacity, Image } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
-import { Button, Input } from 'react-native-elements';
+import { Button, Input} from 'react-native-elements';
+import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -14,6 +16,10 @@ export default function HomeScreen() {
   const [expenses, setExpenses] = useState([]);
   const [newExpense, setNewExpense] = useState('');
   const [newAmount, setNewAmount] = useState('');
+  const [datetime, setDatetime] = useState(new Date().toISOString());
+  const [numPayments, setNumPayments] = useState('');
+  const [selectedExpenseType, setSelectedExpenseType] = useState('food');
+  const [comment, setComment] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
@@ -47,15 +53,24 @@ export default function HomeScreen() {
       await addDoc(expensesCollection, {
         description: newExpense,
         amount: parseFloat(newAmount) || 0,
+        datetime,
+        numPayments: parseInt(numPayments, 10) || 0, 
+        type: selectedExpenseType,
+        comment,
       });
       setNewExpense('');
       setNewAmount('');
+      setDatetime(new Date().toISOString());
+      setNumPayments('');
+      setSelectedExpenseType('food');
+      setComment('');
       fetchExpenses();
-      toggleModal(); // Close the modal after adding a new expense
+      toggleModal();
     } catch (error) {
       console.error('Error adding expense:', error);
     }
   };
+  
 
   const deleteExpense = async (expenseId) => {
     try {
@@ -66,6 +81,8 @@ export default function HomeScreen() {
       console.error('Error deleting expense:', error);
     }
   };
+
+ 
 
   return (
     <View style={styles.container}>
@@ -93,6 +110,40 @@ export default function HomeScreen() {
               keyboardType="numeric"
               containerStyle={styles.inputContainer}
             />
+            <DateTimePicker
+              style={styles.inputContainer}
+              value={new Date(datetime)}
+              mode="datetime"
+              display="default"
+              onChange={(event, date) => setDatetime(date.toISOString())}
+            />
+            <Input
+              placeholder="Number of Payments"
+              value={numPayments}
+              onChangeText={(text) => setNumPayments(text)}
+              keyboardType="numeric"
+              containerStyle={styles.inputContainer}
+            />
+            <Picker
+              selectedValue={selectedExpenseType}
+              onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
+            >
+              <Picker.Item label="Food" value="food" />
+              <Picker.Item label="Traffic" value="traffic" />
+              <Picker.Item label="Entertainment" value="entertainment" />
+              <Picker.Item label="Maintenance" value="maintenance" />
+              <Picker.Item label="Rent" value="rent" />
+              <Picker.Item label="Insurence" value="insurence" />
+              <Picker.Item label="House Expense" value="houseexpense" />
+              <Picker.Item label="Other" value="other" />
+            </Picker>
+            <Input
+              placeholder="Comment"
+              value={comment}
+              onChangeText={(text) => setComment(text)}
+              containerStyle={styles.inputContainer}
+            />
+            
             <Button title="Add Expense" onPress={addExpense} />
             <Button title="Cancel" type="outline" onPress={toggleModal} />
           </View>
