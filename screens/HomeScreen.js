@@ -100,8 +100,11 @@ export default function HomeScreen() {
       />
       <Text style={{ marginBottom: 25,}}>Welcome {user?.email}!</Text>
 
-      <Button style={{ marginBottom: 25,}} title="Enter Expense" onPress={toggleModal} />
-      <Button style={{ marginBottom: 25 }} title="Enter Income" onPress={toggleIncomeModal} />
+      <View style={styles.buttonContainer}>
+          <Button style={styles.button} title="Enter Expense" onPress={toggleModal} />
+          <Button style={styles.button} title="Enter Income" onPress={toggleIncomeModal} />
+      </View>
+
 
       {/**expense modal */}
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
@@ -292,15 +295,14 @@ export default function HomeScreen() {
               signOutText: {
                 color: 'white',
               },
-              navigationButton: {
-                marginTop: 20,
-                backgroundColor: 'blue',
-                padding: 10,
-                borderRadius: 5,
+              
+              buttonContainer: {
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginBottom: 20,
               },
-              navigationButtonText: {
-                color: 'white',
-                textAlign: 'center',
+              button: {
+                marginHorizontal: 5, 
               },
             });
             
