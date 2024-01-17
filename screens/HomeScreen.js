@@ -7,12 +7,14 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useNavigation } from '@react-navigation/native';
 
 const auth = getAuth();
 const db = getFirestore();
 
 export default function HomeScreen() {
   const { user } = useAuthentication();
+  const navigation = useNavigation();
   //expeneses
   const [expenses, setExpenses] = useState([]);
   const [newExpense, setNewExpense] = useState('');
@@ -32,16 +34,7 @@ export default function HomeScreen() {
   const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (user) {
-        await fetchExpenses();
-        await fetchIncomes();
-      }
-    };
-
-    fetchData();
-  }, [user]);
+  
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -51,28 +44,7 @@ export default function HomeScreen() {
     setIsIncomeModalVisible(!isIncomeModalVisible);
   };
 
-  const fetchExpenses = async () => {
-    try {
-      const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
-      const expensesSnapshot = await getDocs(expensesCollection);
-      const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setExpenses(expensesData);
-    } catch (error) {
-      console.error('Error fetching expenses:', error);
-    }
-  };
-
-  const fetchIncomes = async () => {
-    try {
-      const incomesCollection = collection(db, 'users', user?.uid, 'incomes');
-      const incomesSnapshot = await getDocs(incomesCollection);
-      const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setIncomes(incomesData);
-    } catch (error) {
-      console.error('Error fetching incomes:', error);
-    }
-  };
-
+ 
 
   const addExpense = async () => {
     try {
@@ -120,25 +92,7 @@ export default function HomeScreen() {
     }
   };
 
-  const deleteExpense = async (expenseId) => {
-    try {
-      const expenseDoc = doc(db, 'users', user?.uid, 'expenses', expenseId);
-      await deleteDoc(expenseDoc);
-      fetchExpenses();
-    } catch (error) {
-      console.error('Error deleting expense:', error);
-    }
-  };
-
- const deleteIncome = async (incomeId) => {
-    try {
-      const incomeDoc = doc(db, 'users', user?.uid, 'incomes', incomeId);
-      await deleteDoc(incomeDoc);
-      fetchIncomes();
-    } catch (error) {
-      console.error('Error deleting income:', error);
-    }
-  };
+  
 
   return (
     <View style={styles.container}>
@@ -256,8 +210,18 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-
-
+      <TouchableOpacity
+        style={styles.navigationButton}
+        onPress={() => navigation.navigate('Expenses')}
+      >
+        <Text style={styles.navigationButtonText}>Go to Expenses</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.navigationButton}
+        onPress={() => navigation.navigate('Incomes')}
+      >
+        <Text style={styles.navigationButtonText}>Go to Incomes</Text>
+      </TouchableOpacity>
       <View style={styles.headerContainer}>
         <TouchableOpacity
             onPress={() => signOut(auth)}
@@ -267,31 +231,9 @@ export default function HomeScreen() {
         </TouchableOpacity>
     </View>
 
-      <FlatList
-        data={expenses}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={() => (
-          <View style={styles.listHeader}>
-            <Text style={styles.headerText}>Description</Text>
-            <Text style={styles.headerText}>  Amount</Text>
-            <Text style={styles.headerText}>  Delete</Text>
-          </View>
-        )}
-        renderItem={({ item }) => (
-          <View style={styles.expenseItem}>
-            <Text style={styles.expenseDescription}>{item.description}</Text>
-            <Text style={styles.expenseAmount}>{item.amount}</Text>
-            <Button
-            icon={<Icon name="times" size={15} color="red" />}
-            type="clear"
-            onPress={() => deleteExpense(item.id)}
-            />
-            </View>
-            )}
-            />
-            </View>
-            );
-            }
+    </View>
+    );
+   }
             
             const styles = StyleSheet.create({
               container: {
@@ -363,6 +305,16 @@ export default function HomeScreen() {
               },
               signOutText: {
                 color: 'white',
+              },
+              navigationButton: {
+                marginTop: 20,
+                backgroundColor: 'blue',
+                padding: 10,
+                borderRadius: 5,
+              },
+              navigationButtonText: {
+                color: 'white',
+                textAlign: 'center',
               },
             });
             
