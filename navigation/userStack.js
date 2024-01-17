@@ -1,20 +1,22 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import HomeScreen from '../screens/HomeScreen';
 import ExpensesScreen from '../screens/ExpensesScreen';
 import IncomesScreen from '../screens/IncomesScreen';
-const Stack = createStackNavigator();
+
+const Tab = createBottomTabNavigator();
 
 export default function UserStack() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Expenses" component={ExpensesScreen} />
-        <Stack.Screen name="Incomes" component={IncomesScreen} />
-      </Stack.Navigator>
+      <Tab.Navigator>
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Expenses" component={ExpensesScreen} />
+        <Tab.Screen name="Incomes" component={IncomesScreen} />
+      </Tab.Navigator>
     </NavigationContainer>
   );
 }
