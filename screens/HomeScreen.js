@@ -7,14 +7,12 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useNavigation } from '@react-navigation/native';
 
 const auth = getAuth();
 const db = getFirestore();
 
 export default function HomeScreen() {
   const { user } = useAuthentication();
-  const navigation = useNavigation();
   //expeneses
   const [expenses, setExpenses] = useState([]);
   const [newExpense, setNewExpense] = useState('');
@@ -210,18 +208,6 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-      <TouchableOpacity
-        style={styles.navigationButton}
-        onPress={() => navigation.navigate('Expenses')}
-      >
-        <Text style={styles.navigationButtonText}>Go to Expenses</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.navigationButton}
-        onPress={() => navigation.navigate('Incomes')}
-      >
-        <Text style={styles.navigationButtonText}>Go to Incomes</Text>
-      </TouchableOpacity>
       <View style={styles.headerContainer}>
         <TouchableOpacity
             onPress={() => signOut(auth)}
