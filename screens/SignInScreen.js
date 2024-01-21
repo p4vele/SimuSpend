@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity,ImageBackground } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Input, Button } from 'react-native-elements';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
@@ -25,6 +25,7 @@ const SignInScreen = ({ navigation }) => {
   }
 
   return (
+    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
       <Image source={require('../assets/logo.png')}   style={{width: 150, height: 150, alignSelf: 'center', resizeMode: 'contain'}} />
       <Input
@@ -53,13 +54,19 @@ const SignInScreen = ({ navigation }) => {
         </TouchableOpacity>
       </Text>
     </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', // Add a semi-transparent white background to improve readability
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -86,9 +93,9 @@ const styles = StyleSheet.create({
   },
   signUpLink: {
     marginTop: 5,
-     fontSize: 17,
-      textAlign: 'center',
-       color: 'blue' ,
+    fontSize: 17,
+    textAlign: 'center',
+    color: 'blue',
   },
 });
 
