@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { Button, Input} from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useFocusEffect } from '@react-navigation/native';
 
 const db = getFirestore();
 
@@ -38,8 +39,10 @@ export default function IncomesScreen({ navigation }) {
     try {
       const incomesCollection = collection(db, 'users', user?.uid, 'incomes');
       const incomesSnapshot = await getDocs(incomesCollection);
-      const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setIncomes(incomesData);
+      if(incomesCollection && incomesSnapshot.docs){
+        const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setIncomes(incomesData);
+    }
     } catch (error) {
       console.error('Error fetching incomes:', error);
     }
@@ -77,6 +80,11 @@ export default function IncomesScreen({ navigation }) {
     }
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchIncomes();
+    }, [])
+  );
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Incomes</Text>

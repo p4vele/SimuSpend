@@ -7,8 +7,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { Button, Input} from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
-
+import { useFocusEffect } from '@react-navigation/native';
 
 const db = getFirestore();
 
@@ -21,8 +20,8 @@ export default function ExpensesScreen({ navigation }) {
   const [numPayments, setNumPayments] = useState('');
   const [selectedExpenseType, setSelectedExpenseType] = useState('food');
   const [comment, setComment] = useState('');
-  
   const [isModalVisible, setIsModalVisible] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
@@ -33,16 +32,20 @@ export default function ExpensesScreen({ navigation }) {
     fetchData();
   }, [user]);
 
+  
   const fetchExpenses = async () => {
-    try {
-      const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
-      const expensesSnapshot = await getDocs(expensesCollection);
+  try {
+    const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
+    const expensesSnapshot = await getDocs(expensesCollection);
+
+    if (expensesSnapshot && expensesSnapshot.docs) {
       const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setExpenses(expensesData);
-    } catch (error) {
-      console.error('Error fetching expenses:', error);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching expenses:', error);
+  }
+};
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -82,6 +85,12 @@ export default function ExpensesScreen({ navigation }) {
     }
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchExpenses();
+    }, [])
+  );
+  
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Expenses</Text>

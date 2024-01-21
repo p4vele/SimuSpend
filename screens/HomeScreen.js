@@ -32,8 +32,28 @@ export default function HomeScreen() {
   const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
 
 
-  
+  const fetchExpenses = async () => {
+    try {
+      const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
+      const expensesSnapshot = await getDocs(expensesCollection);
+      const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setExpenses(expensesData);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    }
+  };
 
+  const fetchIncomes = async () => {
+    try {
+      const incomesCollection = collection(db, 'users', user?.uid, 'incomes');
+      const incomesSnapshot = await getDocs(incomesCollection);
+      const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setIncomes(incomesData);
+    } catch (error) {
+      console.error('Error fetching incomes:', error);
+    }
+  };
+  
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };
