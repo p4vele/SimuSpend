@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, Modal, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Modal, TouchableOpacity, Image,ImageBackground } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Button, Input} from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
@@ -53,7 +53,7 @@ export default function HomeScreen() {
       console.error('Error fetching incomes:', error);
     }
   };
-  
+
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };
@@ -113,6 +113,7 @@ export default function HomeScreen() {
   
 
   return (
+    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
       <Image
         source={require('../assets/logo.png')}
@@ -241,88 +242,93 @@ export default function HomeScreen() {
     </View>
 
     </View>
+    </ImageBackground>
     );
    }
             
-            const styles = StyleSheet.create({
-              container: {
-                flex: 1,
-                backgroundColor: '#fff',
-                alignItems: 'center',
-                justifyContent: 'center',
-              },
-              inputContainer: {
-                width: '80%',
-                marginTop: 10,
-              },
-              expenseItem: {
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginTop: 10,
-                borderBottomWidth: 1,
-                borderColor: '#ccc',
-                paddingVertical: 10,
-              },
-              expenseDescription: {
-                flex: 2,
-              },
-              expenseAmount: {
-                flex: 1,
-              },
-              listHeader: {
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 10,
-                marginTop: 10,
-                paddingHorizontal: 10,
-              },
-              headerText: {
-                fontWeight: 'bold',
-                fontSize: 15,
-                
-              },
-              modalContainer: {
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-              },
-              modalContent: {
-                backgroundColor: 'white',
-                padding: 20,
-                borderRadius: 10,
-                elevation: 5,
-              },
-              modalTitle: {
-                fontSize: 18,
-                fontWeight: 'bold',
-                marginBottom: 10,
-              },
-              headerContainer: {
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                zIndex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-              },
-              signOutButton: {
-                padding: 10,
-                borderRadius: 5,
-                backgroundColor: 'blue',
-              },
-              signOutText: {
-                color: 'white',
-              },
-              
-              buttonContainer: {
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                marginBottom: 20,
-              },
-              button: {
-                marginHorizontal: 5, 
-              },
-            });
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputContainer: {
+    width: '80%',
+    marginTop: 10,
+  },
+  expenseItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    paddingVertical: 10,
+  },
+  expenseDescription: {
+    flex: 2,
+  },
+  expenseAmount: {
+    flex: 1,
+  },
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
+  headerText: {
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  headerContainer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    zIndex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 10,
+  },
+  signOutButton: {
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: 'blue',
+  },
+  signOutText: {
+    color: 'white',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  button: {
+    marginHorizontal: 5,
+  },
+});
             

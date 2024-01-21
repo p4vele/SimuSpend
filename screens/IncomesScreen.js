@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity ,Modal} from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity ,Modal,ImageBackground} from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc,addDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -86,6 +86,7 @@ export default function IncomesScreen({ navigation }) {
     }, [])
   );
   return (
+    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
       <Text style={styles.title}>Incomes</Text>
       <Button style={{ marginBottom: 25 }} title="Enter Income" onPress={toggleIncomeModal} />
@@ -156,13 +157,19 @@ export default function IncomesScreen({ navigation }) {
         )}
       />
     </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     padding: 20,
   },
   title: {
@@ -203,5 +210,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
+  },
+  inputContainer: {
+    width: '80%',
+    marginTop: 10,
   },
 });
