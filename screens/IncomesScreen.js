@@ -37,6 +37,10 @@ export default function IncomesScreen({ navigation }) {
 
   const fetchIncomes = async () => {
     try {
+      if (!user) {
+        // If user is not defined, do nothing or handle accordingly
+        return;
+      }
       const incomesCollection = collection(db, 'users', user?.uid, 'incomes');
       const incomesSnapshot = await getDocs(incomesCollection);
       if(incomesCollection && incomesSnapshot.docs){

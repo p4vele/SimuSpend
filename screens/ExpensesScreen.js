@@ -34,18 +34,23 @@ export default function ExpensesScreen({ navigation }) {
 
   
   const fetchExpenses = async () => {
-  try {
-    const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
-    const expensesSnapshot = await getDocs(expensesCollection);
-
-    if (expensesSnapshot && expensesSnapshot.docs) {
-      const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setExpenses(expensesData);
+    try {
+      if (!user) {
+        // If user is not defined, do nothing or handle accordingly
+        return;
+      }
+  
+      const expensesCollection = collection(db, 'users', user.uid, 'expenses');
+      const expensesSnapshot = await getDocs(expensesCollection);
+  
+      if (expensesSnapshot && expensesSnapshot.docs) {
+        const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setExpenses(expensesData);
+      }
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
     }
-  } catch (error) {
-    console.error('Error fetching expenses:', error);
-  }
-};
+  };
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
