@@ -122,7 +122,7 @@ export default function ExpensesScreen({ navigation }) {
             <DateTimePicker
               style={styles.inputContainer}
               value={new Date(datetime)}
-              mode="datetime"
+              mode="date"
               display="default"
               onChange={(event, date) => setDatetime(date.toISOString())}
             />

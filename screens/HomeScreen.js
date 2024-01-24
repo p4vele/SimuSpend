@@ -148,7 +148,7 @@ export default function HomeScreen() {
             <DateTimePicker
               style={styles.inputContainer}
               value={new Date(datetime)}
-              mode="datetime"
+              mode="date"
               display="default"
               onChange={(event, date) => setDatetime(date.toISOString())}
             />
@@ -206,7 +206,7 @@ export default function HomeScreen() {
             <DateTimePicker
               style={styles.inputContainer}
               value={new Date(incomeDatetime)}
-              mode="datetime"
+              mode="date"
               display="default"
               onChange={(event, date) => setIncomeDatetime(date.toISOString())}
             />

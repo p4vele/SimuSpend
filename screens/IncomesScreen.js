@@ -115,7 +115,7 @@ export default function IncomesScreen({ navigation }) {
             <DateTimePicker
               style={styles.inputContainer}
               value={new Date(incomeDatetime)}
-              mode="datetime"
+              mode="date"
               display="default"
               onChange={(event, date) => setIncomeDatetime(date.toISOString())}
             />
