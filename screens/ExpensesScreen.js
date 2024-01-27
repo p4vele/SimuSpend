@@ -9,6 +9,14 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 
+
+import * as FileSystem from 'expo-file-system';
+import * as DocumentPicker from 'expo-document-picker';
+import Papa from 'papaparse';
+
+
+
+
 const db = getFirestore();
 
 export default function ExpensesScreen({ navigation }) {
@@ -22,6 +30,9 @@ export default function ExpensesScreen({ navigation }) {
   const [comment, setComment] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const [documentContent, setDocumentContent] = useState('');
+
+
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
@@ -32,6 +43,7 @@ export default function ExpensesScreen({ navigation }) {
     fetchData();
   }, [user]);
 
+  
   
   const fetchExpenses = async () => {
     try {
@@ -96,11 +108,79 @@ export default function ExpensesScreen({ navigation }) {
     }, [])
   );
   
+
+  
+  const uploadCSV = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+      });
+  
+      console.log('Document Picker Result:', result);
+  
+      if (result.type === 'cancel') {
+        console.log('Document picking canceled');
+        return;
+      }
+  
+      const fileUri = result.uri || (result.assets && result.assets.length > 0 && result.assets[0].uri);
+  
+      if (!fileUri || !fileUri.startsWith('file://')) {
+        console.warn('Invalid or missing file URI:', fileUri);
+        return;
+      }
+  
+      console.log('Document URI:', fileUri);
+  
+      
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+  
+      if (fileInfo.exists) {
+      
+        const fileContent = await FileSystem.readAsStringAsync(fileUri);
+        console.log('Text Document Content:', fileContent);
+        
+        const parsedResult = Papa.parse(fileContent);
+
+        // order: ignore, date, description, amount
+      parsedResult.data.forEach(async (row) => {
+        // Convert date to ISO format (yyyy-mm-dd)
+        const dateParts = row[1].split('.');
+        const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+        
+        // Add the expense to Firebase
+        const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
+        await addDoc(expensesCollection, {
+          description: row[2] || '',
+          amount: parseFloat(row[3]) || 0,
+          datetime: isoDate || new Date().toISOString(),
+          
+        });
+      });
+  
+        fetchExpenses(); 
+      } else {
+        console.warn('File does not exist:', fileInfo);
+      }
+    } catch (err) {
+      console.error('Error picking document:', err);
+    }
+  };
+
+  
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
       <Text style={styles.title}>Expenses</Text>
       <Button style={{ marginBottom: 25,}} title="Enter Expense" onPress={toggleModal} />
+      <Button title="Upload CSV" onPress={uploadCSV} />
+      {documentContent !== '' && (
+          <View style={styles.documentContentContainer}>
+            <Text style={styles.documentContentTitle}>Document Content:</Text>
+            <Text style={styles.documentContent}>{documentContent}</Text>
+          </View>
+        )}
       {/**expense modal */}
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
@@ -237,4 +317,11 @@ const styles = StyleSheet.create({
     width: '80%',
     marginTop: 10,
   },
+  uploadedImage: {
+    width: 200, // Set the width as needed
+    height: 200, // Set the height as needed
+    resizeMode: 'cover',
+    marginTop: 10,
+  },
+ 
 });
