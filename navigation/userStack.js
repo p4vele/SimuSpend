@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import ExpensesScreen from '../screens/ExpensesScreen';
 import IncomesScreen from '../screens/IncomesScreen';
-
+import ChatScreen from '../screens/ChatScreen';
 const Tab = createBottomTabNavigator();
 
 export default function UserStack() {
@@ -16,6 +16,7 @@ export default function UserStack() {
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Expenses" component={ExpensesScreen} />
         <Tab.Screen name="Incomes" component={IncomesScreen} />
+        <Tab.Screen name="Chat" component={ChatScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
