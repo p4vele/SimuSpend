@@ -14,6 +14,7 @@ import * as FileSystem from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import Papa from 'papaparse';
 
+import { PieChart } from 'react-native-chart-kit';
 
 
 
@@ -31,30 +32,37 @@ export default function ExpensesScreen({ navigation }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const [documentContent, setDocumentContent] = useState('');
+  const [chartData, setChartData] = useState([]);
 
+  const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (user) {
-        await fetchExpenses();
-      }
-    };
+  const calculateChartData = async () => {
+    const typesData = expenses.reduce((acc, expense) => {
+      acc[expense.type] = (acc[expense.type] || 0) + expense.amount;
+      return acc;
+    }, {});
 
-    fetchData();
-  }, [user]);
+    const newChartData = Object.keys(typesData).map((type, index) => ({
+      name: type,
+      amount: typesData[type],
+      color: colorScale[index % colorScale.length], // Use a predefined set of colors
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 15,
+    }));
 
-  
-  
+    setChartData(newChartData);
+  };
+
   const fetchExpenses = async () => {
     try {
       if (!user) {
-        // If user is not defined, do nothing or handle accordingly
+        console.log("no user");
         return;
       }
-  
+
       const expensesCollection = collection(db, 'users', user.uid, 'expenses');
       const expensesSnapshot = await getDocs(expensesCollection);
-  
+
       if (expensesSnapshot && expensesSnapshot.docs) {
         const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setExpenses(expensesData);
@@ -63,6 +71,15 @@ export default function ExpensesScreen({ navigation }) {
       console.error('Error fetching expenses:', error);
     }
   };
+
+  useEffect(() => {
+    const loadData = async () => {
+      await fetchExpenses();
+      await calculateChartData();
+    };
+  
+    loadData();
+  }, [user,expenses]);
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -102,11 +119,7 @@ export default function ExpensesScreen({ navigation }) {
     }
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchExpenses();
-    }, [])
-  );
+  
   
 
   
@@ -146,7 +159,7 @@ export default function ExpensesScreen({ navigation }) {
         // order: ignore, date, description, amount
       parsedResult.data.forEach(async (row) => {
         // Convert date to ISO format (yyyy-mm-dd)
-        const dateParts = row[1].split('.');
+        const dateParts = row[1].splwit('.');
         const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
         
         // Add the expense to Firebase
@@ -175,12 +188,25 @@ export default function ExpensesScreen({ navigation }) {
       <Text style={styles.title}>Expenses</Text>
       <Button style={{ marginBottom: 25,}} title="Enter Expense" onPress={toggleModal} />
       <Button title="Upload CSV" onPress={uploadCSV} />
-      {documentContent !== '' && (
-          <View style={styles.documentContentContainer}>
-            <Text style={styles.documentContentTitle}>Document Content:</Text>
-            <Text style={styles.documentContent}>{documentContent}</Text>
-          </View>
+
+      {chartData.length > 0 && (
+          <PieChart
+            data={chartData}
+            width={350}
+            height={220}
+            chartConfig={{
+              backgroundGradientFrom: '#1E2923',
+              backgroundGradientTo: '#08130D',
+              color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+            }}
+            accessor="amount"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute
+          />
         )}
+
+      
       {/**expense modal */}
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>

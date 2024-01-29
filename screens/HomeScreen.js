@@ -7,13 +7,14 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { LineChart, PieChart } from 'react-native-chart-kit';
 
 const auth = getAuth();
 const db = getFirestore();
 
 export default function HomeScreen() {
   const { user } = useAuthentication();
-  //expeneses
+
   const [expenses, setExpenses] = useState([]);
   const [newExpense, setNewExpense] = useState('');
   const [newAmount, setNewAmount] = useState('');
@@ -22,7 +23,7 @@ export default function HomeScreen() {
   const [selectedExpenseType, setSelectedExpenseType] = useState('food');
   const [comment, setComment] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
-  //incomes
+
   const [incomes, setIncomes] = useState([]);
   const [newIncome, setNewIncome] = useState('');
   const [incomeAmount, setIncomeAmount] = useState('');
@@ -31,6 +32,10 @@ export default function HomeScreen() {
   const [incomeComment, setIncomeComment] = useState('');
   const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
 
+  const [expenseChartData, setExpenseChartData] = useState([]);
+  const [incomeChartData, setIncomeChartData] = useState([]);
+
+
 
   const fetchExpenses = async () => {
     try {
@@ -38,6 +43,9 @@ export default function HomeScreen() {
       const expensesSnapshot = await getDocs(expensesCollection);
       const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setExpenses(expensesData);
+
+      // Calculate and set expense chart data
+      calculateExpenseChartData(expensesData);
     } catch (error) {
       console.error('Error fetching expenses:', error);
     }
@@ -49,10 +57,20 @@ export default function HomeScreen() {
       const incomesSnapshot = await getDocs(incomesCollection);
       const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setIncomes(incomesData);
+
+      // Calculate and set income chart data
+      calculateIncomeChartData(incomesData);
     } catch (error) {
       console.error('Error fetching incomes:', error);
     }
   };
+  useEffect(() => {
+    // Fetch data on initial render
+    if (user) {
+      fetchExpenses();
+      fetchIncomes();
+    }
+  }, [user]);
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -62,7 +80,41 @@ export default function HomeScreen() {
     setIsIncomeModalVisible(!isIncomeModalVisible);
   };
 
- 
+  const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
+
+  const calculateExpenseChartData = async (expensesData) => {
+    const typesData = expensesData.reduce((acc, expense) => {
+      acc[expense.type] = (acc[expense.type] || 0) + expense.amount;
+      return acc;
+    }, {});
+
+    const newChartData = Object.keys(typesData).map((type, index) => ({
+      name: type,
+      amount: typesData[type],
+      color: colorScale[index % colorScale.length],
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 15,
+    }));
+
+    setExpenseChartData(newChartData);
+  };
+
+  const calculateIncomeChartData = async (incomesData) => {
+    const typesData = incomesData.reduce((acc, income) => {
+      acc[income.type] = (acc[income.type] || 0) + income.amount;
+      return acc;
+    }, {});
+
+    const newChartData = Object.keys(typesData).map((type, index) => ({
+      name: type,
+      amount: typesData[type],
+      color: colorScale[index % colorScale.length],
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 15,
+    }));
+
+    setIncomeChartData(newChartData);
+  };
 
   const addExpense = async () => {
     try {
@@ -71,7 +123,7 @@ export default function HomeScreen() {
         description: newExpense,
         amount: parseFloat(newAmount) || 0,
         datetime,
-        numPayments: parseInt(numPayments, 10) || 0, 
+        numPayments: parseInt(numPayments, 10) || 0,
         type: selectedExpenseType,
         comment,
       });
@@ -81,13 +133,15 @@ export default function HomeScreen() {
       setNumPayments('');
       setSelectedExpenseType('food');
       setComment('');
+      // Fetch both expenses and incomes after an item is added
       fetchExpenses();
+      fetchIncomes();
       toggleModal();
     } catch (error) {
       console.error('Error adding expense:', error);
     }
   };
-  
+
   const addIncome = async () => {
     try {
       const incomesCollection = collection(db, 'users', user?.uid, 'incomes');
@@ -184,7 +238,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-
+      
        {/* Income Modal */}
        <Modal visible={isIncomeModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
@@ -232,6 +286,40 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+      {/* Display expense chart */}
+      <Text style={styles.chartTitle}>Expense Chart</Text>
+        <PieChart
+          data={expenseChartData}
+          width={250} // Adjusted width
+          height={150} // Adjusted height
+          chartConfig={{
+            backgroundGradientFrom: '#1E2923',
+            backgroundGradientTo: '#08130D',
+            color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+          }}
+          accessor="amount"
+          backgroundColor="transparent"
+          paddingLeft="15"
+          absolute
+        />
+
+        {/* Display income chart */}
+        <Text style={styles.chartTitle}>Income Chart</Text>
+        <PieChart
+          data={incomeChartData}
+          width={250} // Adjusted width
+          height={150} // Adjusted height
+          chartConfig={{
+            backgroundGradientFrom: '#1E2923',
+            backgroundGradientTo: '#08130D',
+            color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+          }}
+          accessor="amount"
+          backgroundColor="transparent"
+          paddingLeft="15"
+          absolute
+        />
+
       <View style={styles.headerContainer}>
         <TouchableOpacity
             onPress={() => signOut(auth)}
@@ -329,6 +417,14 @@ const styles = StyleSheet.create({
   },
   button: {
     marginHorizontal: 5,
+  },
+  
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });
             

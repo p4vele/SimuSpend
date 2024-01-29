@@ -7,6 +7,7 @@ import { Button, Input} from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
+import { PieChart } from 'react-native-chart-kit';
 
 const db = getFirestore();
 
@@ -19,16 +20,7 @@ export default function IncomesScreen({ navigation }) {
   const [selectedIncomeType, setSelectedIncomeType] = useState('salary');
   const [incomeComment, setIncomeComment] = useState('');
   const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (user) {
-        await fetchIncomes();
-      }
-    };
-
-    fetchData();
-  }, [user]);
+  const [incomeChartData, setIncomeChartData] = useState([]);
 
   const toggleIncomeModal = () => {
     setIsIncomeModalVisible(!isIncomeModalVisible);
@@ -51,6 +43,33 @@ export default function IncomesScreen({ navigation }) {
       console.error('Error fetching incomes:', error);
     }
   };
+  const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
+
+  const calculateIncomeChartData = async () => {
+    const typesData = incomes.reduce((acc, income) => {
+      acc[income.type] = (acc[income.type] || 0) + income.amount;
+      return acc;
+    }, {});
+
+    const newChartData = Object.keys(typesData).map((type, index) => ({
+      name: type,
+      amount: typesData[type],
+      color: colorScale[index % colorScale.length], // Use modulo to cycle through the color scale
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 15,
+    }));
+
+    setIncomeChartData(newChartData);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+        await fetchIncomes();
+        await calculateIncomeChartData();
+    };
+  
+    fetchData();
+  }, [user, incomes]);
 
   const addIncome = async () => {
     try {
@@ -84,16 +103,29 @@ export default function IncomesScreen({ navigation }) {
     }
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchIncomes();
-    }, [])
-  );
+  
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
       <Text style={styles.title}>Incomes</Text>
       <Button style={{ marginBottom: 25 }} title="Enter Income" onPress={toggleIncomeModal} />
+      {incomeChartData.length > 0 && (
+        <PieChart
+          data={incomeChartData}
+          width={350}
+          height={220}
+          chartConfig={{
+            backgroundGradientFrom: '#1E2923',
+            backgroundGradientTo: '#08130D',
+            color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+          }}
+          accessor="amount"
+          backgroundColor="transparent"
+          paddingLeft="15"
+          absolute
+        />
+      )}
+
       {/* Income Modal */}
       <Modal visible={isIncomeModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
