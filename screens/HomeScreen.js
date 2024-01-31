@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, Modal, TouchableOpacity, Image,ImageBackground } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Modal, TouchableOpacity, Image,ImageBackground,Container, Content, } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Button, Input} from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
@@ -8,9 +8,13 @@ import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { LineChart, PieChart } from 'react-native-chart-kit';
+import  Swiper from 'react-native-swiper'
+import OperationsScreen from './OperationsScreen';
 
 const auth = getAuth();
 const db = getFirestore();
+
+
 
 export default function HomeScreen() {
   const { user } = useAuthentication();
@@ -286,39 +290,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-      {/* Display expense chart */}
-      <Text style={styles.chartTitle}>Expense Chart</Text>
-        <PieChart
-          data={expenseChartData}
-          width={250} // Adjusted width
-          height={150} // Adjusted height
-          chartConfig={{
-            backgroundGradientFrom: '#1E2923',
-            backgroundGradientTo: '#08130D',
-            color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-          }}
-          accessor="amount"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          absolute
-        />
-
-        {/* Display income chart */}
-        <Text style={styles.chartTitle}>Income Chart</Text>
-        <PieChart
-          data={incomeChartData}
-          width={250} // Adjusted width
-          height={150} // Adjusted height
-          chartConfig={{
-            backgroundGradientFrom: '#1E2923',
-            backgroundGradientTo: '#08130D',
-            color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-          }}
-          accessor="amount"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          absolute
-        />
+      
 
       <View style={styles.headerContainer}>
         <TouchableOpacity
@@ -328,7 +300,51 @@ export default function HomeScreen() {
             <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
     </View>
-
+    <View style={styles.container}>
+    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
+          <Swiper>
+            <View style={styles.slideDeafault}>
+              {/* Display expense chart */}
+              <Text style={styles.chartTitle}>Expense Chart</Text>
+                <PieChart
+                  data={expenseChartData}
+                  width={350} // Adjusted width
+                  height={150} // Adjusted height
+                  chartConfig={{
+                    backgroundGradientFrom: '#1E2923',
+                    backgroundGradientTo: '#08130D',
+                    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+                  }}
+                  accessor="amount"
+                  backgroundColor="transparent"
+                  
+                />
+            </View>
+            <View style={styles.slideDeafault}>
+                {/* Display income chart */}
+                <Text style={styles.chartTitle}>Income Chart</Text>
+                    <PieChart
+                      data={incomeChartData}
+                      width={350} // Adjusted width
+                      height={150} // Adjusted height
+                      chartConfig={{
+                        backgroundGradientFrom: '#1E2923',
+                        backgroundGradientTo: '#08130D',
+                        color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+                      }}
+                      accessor="amount"
+                      backgroundColor="transparent"
+                      
+                />
+            </View>
+          </Swiper>
+          </ImageBackground>
+      </View>
+      <View style={styles.operationsScreenContainer}>
+        <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
+          <OperationsScreen data={expenses.concat(incomes).sort((a, b) => new Date(b.datetime) - new Date(a.datetime))} />
+        </ImageBackground>
+      </View>
     </View>
     </ImageBackground>
     );
@@ -339,6 +355,11 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: 'cover',
     justifyContent: 'center',
+  },
+  operationsScreenContainer: {
+    flex: 1,
+    width:'100%',
+    justifyContent: 'flex-end', 
   },
   container: {
     flex: 1,
@@ -424,7 +445,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 10,
-    textAlign: 'center',
+    right: 100, 
+  },
+  slideDeafault:{
+    flex:1,
+    justifyContent:'center',
+    alignItems:'center',
+    
+  },
+  peek:{
+    flex:1,
+    justifyContent:'center',
+    alignItems:'center',
+    
   },
 });
             
