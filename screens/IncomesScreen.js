@@ -8,6 +8,7 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { PieChart } from 'react-native-chart-kit';
+import { RefreshControl } from 'react-native';
 
 const db = getFirestore();
 
@@ -21,28 +22,12 @@ export default function IncomesScreen({ navigation }) {
   const [incomeComment, setIncomeComment] = useState('');
   const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
   const [incomeChartData, setIncomeChartData] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const toggleIncomeModal = () => {
     setIsIncomeModalVisible(!isIncomeModalVisible);
   };
 
-
-  const fetchIncomes = async () => {
-    try {
-      if (!user) {
-        // If user is not defined, do nothing or handle accordingly
-        return;
-      }
-      const incomesCollection = collection(db, 'users', user?.uid, 'incomes');
-      const incomesSnapshot = await getDocs(incomesCollection);
-      if(incomesCollection && incomesSnapshot.docs){
-        const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setIncomes(incomesData);
-    }
-    } catch (error) {
-      console.error('Error fetching incomes:', error);
-    }
-  };
   const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
 
   const calculateIncomeChartData = async () => {
@@ -61,15 +46,44 @@ export default function IncomesScreen({ navigation }) {
 
     setIncomeChartData(newChartData);
   };
+  const fetchIncomes = async () => {
+    try {
+      if (!user) {
+        // If user is not defined, do nothing or handle accordingly
+        return;
+      }
+      const incomesCollection = collection(db, 'users', user?.uid, 'incomes');
+      const incomesSnapshot = await getDocs(incomesCollection);
+      if(incomesCollection && incomesSnapshot.docs){
+        const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setIncomes(incomesData);
+        console.log("fetch income - income screen");
+        calculateIncomeChartData();
+    }
+    } catch (error) {
+      console.error('Error fetching incomes:', error);
+    }
+  };
+ 
 
   useEffect(() => {
     const fetchData = async () => {
         await fetchIncomes();
-        await calculateIncomeChartData();
     };
   
     fetchData();
-  }, [user, incomes]);
+  }, [user]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (incomes.length > 0) {
+        const newData = await calculateIncomeChartData(expenses);
+        setIncomeChartData(newData);
+      }
+    };
+
+    loadData();
+  }, [incomes]);
 
   const addIncome = async () => {
     try {
@@ -102,7 +116,11 @@ export default function IncomesScreen({ navigation }) {
       console.error('Error deleting income:', error);
     }
   };
-
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchIncomes();
+    setRefreshing(false);
+  };
   
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
@@ -176,6 +194,9 @@ export default function IncomesScreen({ navigation }) {
       <FlatList
         data={incomes}
         keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.incomeItem}

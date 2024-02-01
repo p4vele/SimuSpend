@@ -8,6 +8,7 @@ import { Button, Input} from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
+import { RefreshControl } from 'react-native';
 
 
 import * as FileSystem from 'expo-file-system';
@@ -16,9 +17,26 @@ import Papa from 'papaparse';
 
 import { PieChart } from 'react-native-chart-kit';
 
-
-
 const db = getFirestore();
+
+const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
+
+const calculateChartData = (expensesData) => {
+  const typesData = expensesData.reduce((acc, expense) => {
+    acc[expense.type] = (acc[expense.type] || 0) + expense.amount;
+    return acc;
+  }, {});
+
+  const newChartData = Object.keys(typesData).map((type, index) => ({
+    name: type,
+    amount: typesData[type],
+    color: colorScale[index % colorScale.length],
+    legendFontColor: '#7F7F7F',
+    legendFontSize: 15,
+  }));
+
+  return newChartData;
+};
 
 export default function ExpensesScreen({ navigation }) {
   const { user } = useAuthentication();
@@ -33,25 +51,9 @@ export default function ExpensesScreen({ navigation }) {
 
   const [documentContent, setDocumentContent] = useState('');
   const [chartData, setChartData] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
-
-  const calculateChartData = async () => {
-    const typesData = expenses.reduce((acc, expense) => {
-      acc[expense.type] = (acc[expense.type] || 0) + expense.amount;
-      return acc;
-    }, {});
-
-    const newChartData = Object.keys(typesData).map((type, index) => ({
-      name: type,
-      amount: typesData[type],
-      color: colorScale[index % colorScale.length], // Use a predefined set of colors
-      legendFontColor: '#7F7F7F',
-      legendFontSize: 15,
-    }));
-
-    setChartData(newChartData);
-  };
+  
 
   const fetchExpenses = async () => {
     try {
@@ -66,6 +68,8 @@ export default function ExpensesScreen({ navigation }) {
       if (expensesSnapshot && expensesSnapshot.docs) {
         const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setExpenses(expensesData);
+        console.log("fetch expenses - expenses screen");
+        await calculateChartData(expensesData);
       }
     } catch (error) {
       console.error('Error fetching expenses:', error);
@@ -75,11 +79,21 @@ export default function ExpensesScreen({ navigation }) {
   useEffect(() => {
     const loadData = async () => {
       await fetchExpenses();
-      await calculateChartData();
     };
   
     loadData();
-  }, [user,expenses]);
+  }, [user]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (expenses.length > 0) {
+        const newData = await calculateChartData(expenses);
+        setChartData(newData);
+      }
+    };
+
+    loadData();
+  }, [expenses]);
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -181,7 +195,12 @@ export default function ExpensesScreen({ navigation }) {
     }
   };
 
-  
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchExpenses();
+    setRefreshing(false);
+  };
+
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
@@ -202,7 +221,7 @@ export default function ExpensesScreen({ navigation }) {
             accessor="amount"
             backgroundColor="transparent"
             paddingLeft="15"
-            absolute
+            
           />
         )}
 
@@ -268,6 +287,9 @@ export default function ExpensesScreen({ navigation }) {
       <FlatList
         data={expenses}
         keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.expenseItem}

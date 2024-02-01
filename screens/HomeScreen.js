@@ -41,15 +41,15 @@ export default function HomeScreen() {
 
 
 
+
   const fetchExpenses = async () => {
     try {
       const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
       const expensesSnapshot = await getDocs(expensesCollection);
       const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setExpenses(expensesData);
-
-      // Calculate and set expense chart data
       calculateExpenseChartData(expensesData);
+      console.log("fetch expenses home ");
     } catch (error) {
       console.error('Error fetching expenses:', error);
     }
@@ -61,15 +61,14 @@ export default function HomeScreen() {
       const incomesSnapshot = await getDocs(incomesCollection);
       const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setIncomes(incomesData);
-
-      // Calculate and set income chart data
       calculateIncomeChartData(incomesData);
+      console.log("fetch income home ");
     } catch (error) {
       console.error('Error fetching incomes:', error);
     }
   };
   useEffect(() => {
-    // Fetch data on initial render
+
     if (user) {
       fetchExpenses();
       fetchIncomes();
@@ -137,9 +136,7 @@ export default function HomeScreen() {
       setNumPayments('');
       setSelectedExpenseType('food');
       setComment('');
-      // Fetch both expenses and incomes after an item is added
       fetchExpenses();
-      fetchIncomes();
       toggleModal();
     } catch (error) {
       console.error('Error adding expense:', error);
@@ -171,6 +168,7 @@ export default function HomeScreen() {
   
 
   return (
+    
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
       <Image

@@ -8,6 +8,7 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { PieChart } from 'react-native-chart-kit';
+import { RefreshControl } from 'react-native';
 
 const db = getFirestore();
 
@@ -23,7 +24,8 @@ export default function OperationsScreen({ navigation }) {
   const [expenses, setExpenses] = useState([]);
   const [incomes, setIncomes] = useState([]);
   const [mergedData, setMergedData] = useState([]);
-  
+  const [refreshing, setRefreshing] = useState(false);
+
   const fetchData = async () => {
     try {
       if (!user) {
@@ -44,20 +46,26 @@ export default function OperationsScreen({ navigation }) {
 
         const mergedData = [...expensesData, ...incomesData].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
         setData(mergedData);
+        console.log("fetch data operations");
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
 
-  // Use useFocusEffect to fetch data when the screen is focused
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchData();
-    }, [user]) // Dependency on user to trigger data fetch when the user changes
-  );
+  useEffect(() => {
+    const loadData = async () => {
+        await fetchData();
+    };
   
-
+    loadData();
+  }, [user]);
+  
+ const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <View style={styles.container}>
@@ -65,6 +73,9 @@ export default function OperationsScreen({ navigation }) {
         <FlatList
             data={data}
             keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
             renderItem={({ item }) => (
                 <TouchableOpacity
                 style={[styles.entryItem, { backgroundColor: item.type === 'income' ? '#8eff8e' : '#ff8e8e' }]}
