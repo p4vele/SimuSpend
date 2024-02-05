@@ -66,12 +66,12 @@ const SignInScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: 'cover',
+    resizeMode: 'contain',
     justifyContent: 'center',
   },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)', // Add a semi-transparent white background to improve readability
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', 
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -82,11 +82,12 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginTop: 10,
-    width: '80%', // Adjust the width as needed
+    width: '80%', 
   },
   button: {
     marginTop: 10,
-  },
+    backgroundColor:'green',
+    },
   error: {
     marginTop: 10,
     color: 'red',
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 17,
     textAlign: 'center',
-    color: 'blue',
+    color: 'green',
   },
 });
 

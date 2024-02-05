@@ -175,7 +175,7 @@ export default function HomeScreen() {
         source={require('../assets/logo.png')}
         style={{ width: 150, height: 150, alignSelf: 'center', resizeMode: 'contain' }}
       />
-      <Text style={{ marginBottom: 25,}}>Welcome {user?.email}!</Text>
+      <Text style={{ fontSize:20, marginBottom:20}}>Hello {user?.email}!</Text>
 
       <View style={styles.buttonContainer}>
           <Button style={styles.button} title="Enter Expense" onPress={toggleModal} />
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   signOutButton: {
     padding: 10,
     borderRadius: 5,
-    backgroundColor: 'blue',
+    backgroundColor: 'green',
   },
   signOutText: {
     color: 'white',
@@ -449,13 +449,8 @@ const styles = StyleSheet.create({
     flex:1,
     justifyContent:'center',
     alignItems:'center',
-    
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', 
   },
-  peek:{
-    flex:1,
-    justifyContent:'center',
-    alignItems:'center',
-    
-  },
+ 
 });
             

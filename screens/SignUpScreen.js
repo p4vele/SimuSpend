@@ -110,6 +110,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
+    backgroundColor:'green',
   },
   error: {
     marginTop: 10,
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 17,
     textAlign: 'center',
-    color: 'blue',
+    color: 'green',
   },
 });
 
