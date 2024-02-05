@@ -287,13 +287,12 @@ export default function ExpensesScreen({ navigation }) {
       <FlatList
         data={expenses}
         keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.expenseItem}
-            onPress={() => navigation.navigate('ExpenseDetails', { expense: item })}
+            style={styles.gridItem}
+            
           >
             <Text style={styles.expenseDescription}>{item.description}</Text>
             <Text style={styles.expenseAmount}>{item.amount}</Text>
@@ -371,5 +370,17 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     marginTop: 10,
   },
- 
+  gridItem: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 5,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#fff', 
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
 });

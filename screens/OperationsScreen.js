@@ -71,23 +71,24 @@ export default function OperationsScreen({ navigation }) {
       <View style={styles.container}>
         <Text style={styles.title}>Operations</Text>
         <FlatList
-            data={data}
-            keyExtractor={(item) => item.id}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-            renderItem={({ item }) => (
-                <TouchableOpacity
-                style={[styles.entryItem, { backgroundColor: item.type === 'income' ? '#8eff8e' : '#ff8e8e' }]}
-                onPress={() => navigation.navigate(`${item.type === 'expense' ? 'Expense' : 'Income'}Details`, { entry: item })}
-                >
-                <Text style={styles.entryDescription}>{item.description}</Text>
-                <Text style={[styles.entryAmount, { color: item.type === 'income' ? 'green' : 'red' }]}>
-                    {item.amount}
-                </Text>
-                </TouchableOpacity>
-            )}
-            />
+          data={data}
+          keyExtractor={(item) => item.id}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[
+                styles.entryGridItem,
+                { backgroundColor: item.type === 'income' ? '#8eff8e' : '#ff8e8e' },
+              ]}
+
+            >
+              <Text style={styles.entryDescription}>{item.description}</Text>
+              <Text style={[styles.entryAmount, { color: item.type === 'income' ? 'green' : 'red' }]}>
+                {item.amount}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
       </View>
     </ImageBackground>
   );
@@ -146,5 +147,18 @@ const styles = StyleSheet.create({
   inputContainer: {
     width: '80%',
     marginTop: 10,
+  },
+  entryGridItem: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 5,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#fff', // Set your desired background color
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
 });

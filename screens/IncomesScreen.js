@@ -194,13 +194,11 @@ export default function IncomesScreen({ navigation }) {
       <FlatList
         data={incomes}
         keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.incomeItem}
-            onPress={() => navigation.navigate('IncomeDetails', { income: item })}
+            style={styles.incomeGridItem}
+            
           >
             <Text style={styles.incomeDescription}>{item.description}</Text>
             <Text style={styles.incomeAmount}>{item.amount}</Text>
@@ -271,5 +269,18 @@ const styles = StyleSheet.create({
   inputContainer: {
     width: '80%',
     marginTop: 10,
+  },
+  incomeGridItem: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 5,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#fff', 
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
 });
