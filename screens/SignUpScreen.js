@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, ImageBackground, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ImageBackground, Image, TouchableOpacity,TouchableWithoutFeedback,Keyboard } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Input, Button } from 'react-native-elements';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
@@ -37,6 +37,7 @@ const SignUpScreen = ({ navigation }) => {
 
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <Image source={require('../assets/logo.png')} style={styles.logo} />
 
@@ -80,6 +81,7 @@ const SignUpScreen = ({ navigation }) => {
           </Text>
         </View>
       </View>
+      </TouchableWithoutFeedback>
     </ImageBackground>
   );
 };
