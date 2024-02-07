@@ -12,6 +12,25 @@ import { RefreshControl } from 'react-native';
 
 const db = getFirestore();
 
+const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
+
+  const calculateIncomeChartData = async (incomesData) => {
+    const typesData = incomesData.reduce((acc, income) => {
+      acc[income.type] = (acc[income.type] || 0) + income.amount;
+      return acc;
+    }, {});
+
+    const newChartData = Object.keys(typesData).map((type, index) => ({
+      name: type,
+      amount: typesData[type],
+      color: colorScale[index % colorScale.length], // Use modulo to cycle through the color scale
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 15,
+    }));
+
+    return newChartData;
+  };
+
 export default function IncomesScreen({ navigation }) {
   const { user } = useAuthentication();
   const [incomes, setIncomes] = useState([]);
@@ -28,24 +47,7 @@ export default function IncomesScreen({ navigation }) {
     setIsIncomeModalVisible(!isIncomeModalVisible);
   };
 
-  const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
-
-  const calculateIncomeChartData = async () => {
-    const typesData = incomes.reduce((acc, income) => {
-      acc[income.type] = (acc[income.type] || 0) + income.amount;
-      return acc;
-    }, {});
-
-    const newChartData = Object.keys(typesData).map((type, index) => ({
-      name: type,
-      amount: typesData[type],
-      color: colorScale[index % colorScale.length], // Use modulo to cycle through the color scale
-      legendFontColor: '#7F7F7F',
-      legendFontSize: 15,
-    }));
-
-    setIncomeChartData(newChartData);
-  };
+  
   const fetchIncomes = async () => {
     try {
       if (!user) {
@@ -58,7 +60,7 @@ export default function IncomesScreen({ navigation }) {
         const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setIncomes(incomesData);
         console.log("fetch income - income screen");
-        calculateIncomeChartData();
+        await calculateIncomeChartData(incomesData);
     }
     } catch (error) {
       console.error('Error fetching incomes:', error);
@@ -77,7 +79,7 @@ export default function IncomesScreen({ navigation }) {
   useEffect(() => {
     const loadData = async () => {
       if (incomes.length > 0) {
-        const newData = await calculateIncomeChartData(expenses);
+        const newData = await calculateIncomeChartData(incomes);
         setIncomeChartData(newData);
       }
     };
