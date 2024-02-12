@@ -47,7 +47,8 @@ export default function ExpensesScreen({ navigation }) {
   const [chartData, setChartData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  
+  const [selectedCreditCard, setSelectedCreditCard] = useState('cash');
+  const [creditCards, setCreditCards] = useState([]); 
 
   const fetchExpenses = async () => {
     try {
@@ -69,10 +70,29 @@ export default function ExpensesScreen({ navigation }) {
       console.error('Error fetching expenses:', error);
     }
   };
+  const fetchCreditCards = async () => {
+    try {
+      if (!user) {
+        console.log("no user");
+        return;
+      }
+
+      const creditCardsCollection = collection(db, 'users', user.uid, 'creditCards');
+      const creditCardsSnapshot = await getDocs(creditCardsCollection);
+
+      if (creditCardsSnapshot && creditCardsSnapshot.docs) {
+        const creditCardsData = creditCardsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setCreditCards(creditCardsData);
+      }
+    } catch (error) {
+      console.error('Error fetching credit cards:', error);
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
       await fetchExpenses();
+      await fetchCreditCards();
     };
   
     loadData();
@@ -103,6 +123,8 @@ export default function ExpensesScreen({ navigation }) {
         numPayments: parseInt(numPayments, 10) || 0, 
         type: selectedExpenseType,
         comment,
+        creditCard: selectedCreditCard,
+
       });
       setNewExpense('');
       setNewAmount('');
@@ -160,61 +182,85 @@ export default function ExpensesScreen({ navigation }) {
       
       {/**expense modal */}
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { width: '80%' }]}>
-            <Text style={styles.modalTitle}>Enter Expense</Text>
-            <Input
-              placeholder="Expense Description"
-              value={newExpense}
-              onChangeText={(text) => setNewExpense(text)}
-              containerStyle={styles.inputContainer}
-            />
-            <Input
-              placeholder="Expense Amount"
-              value={newAmount}
-              onChangeText={(text) => setNewAmount(text)}
-              keyboardType="numeric"
-              containerStyle={styles.inputContainer}
-            />
-            <DateTimePicker
-              style={styles.inputContainer}
-              value={new Date(datetime)}
-              mode="date"
-              display="default"
-              onChange={(event, date) => setDatetime(date.toISOString())}
-            />
-            <Input
-              placeholder="Number of Payments"
-              value={numPayments}
-              onChangeText={(text) => setNumPayments(text)}
-              keyboardType="numeric"
-              containerStyle={styles.inputContainer}
-            />
-            <Picker
-              selectedValue={selectedExpenseType}
-              onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
-            >
-              <Picker.Item label="Food" value="food" />
-              <Picker.Item label="Traffic" value="traffic" />
-              <Picker.Item label="Entertainment" value="entertainment" />
-              <Picker.Item label="Maintenance" value="maintenance" />
-              <Picker.Item label="Rent" value="rent" />
-              <Picker.Item label="Insurence" value="insurence" />
-              <Picker.Item label="House Expense" value="houseexpense" />
-              <Picker.Item label="Other" value="other" />
-            </Picker>
-            <Input
-              placeholder="Comment"
-              value={comment}
-              onChangeText={(text) => setComment(text)}
-              containerStyle={styles.inputContainer}
-            />
-            
-            <Button title="Add Expense" onPress={addExpense} />
-            <Button title="Cancel" type="outline" onPress={toggleModal} />
+          <View style={styles.modalContainer}>
+            <View style={[styles.modalContent, { flexDirection: 'row' }]}>
+              {/* First Column */}
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <Text style={styles.modalTitle}>Enter Expense</Text>
+                <Input
+                  placeholder="תיאור"
+                  value={newExpense}
+                  onChangeText={(text) => setNewExpense(text)}
+                  containerStyle={styles.inputContainer}
+                />
+                <Input
+                  placeholder="סכום"
+                  value={newAmount}
+                  onChangeText={(text) => setNewAmount(text)}
+                  keyboardType="numeric"
+                  containerStyle={styles.inputContainer}
+                />
+                <DateTimePicker
+                  style={styles.inputContainer}
+                  value={new Date(datetime)}
+                  mode="date"
+                  display="default"
+                  onChange={(event, date) => setDatetime(date.toISOString())}
+                />
+                <Input
+                  placeholder="מספר תשלומים"
+                  value={numPayments}
+                  onChangeText={(text) => setNumPayments(text)}
+                  keyboardType="numeric"
+                  containerStyle={styles.inputContainer}
+                />
+                <Input
+                  placeholder="הערה"
+                  value={comment}
+                  onChangeText={(text) => setComment(text)}
+                  containerStyle={styles.inputContainer}
+                />
+              </View>
+
+              {/* Second Column */}
+              <View style={{ flex: 1, paddingLeft: 10 }}>
+                <Text style={{ fontSize:18, paddingLeft: 50 }}>סוג הוצאה</Text>
+                <Picker
+                  selectedValue={selectedExpenseType}
+                  onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
+                >
+                   <Picker.Item label="Food" value="food" />
+                  <Picker.Item label="Traffic" value="traffic" />
+                  <Picker.Item label="Entertainment" value="entertainment" />
+                  <Picker.Item label="Maintenance" value="maintenance" />
+                  <Picker.Item label="Rent" value="rent" />
+                  <Picker.Item label="Insurence" value="insurence" />
+                  <Picker.Item label="House Expense" value="houseexpense" />
+                  <Picker.Item label="Other" value="other" />
+                </Picker>
+                <Text style={{ fontSize:18, paddingLeft: 45 }}>אמצעי תשלום</Text>
+
+                <Picker
+                  selectedValue={selectedCreditCard}
+                  onValueChange={(itemValue) => setSelectedCreditCard(itemValue)}
+                >
+                  <Picker.Item label="Cash" value="cash" />
+                    {creditCards.map((card) => (
+                      <Picker.Item key={card.id} label={card.nickname} value={card.id} />
+                    ))}
+                </Picker>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+
+                  <Button title="Add Expense" onPress={addExpense} />
+                  <Button title="Cancel" type="outline" onPress={toggleModal} />
+                </View>
+              </View>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+             
+            
+              
 
       <FlatList
         data={expenses}
@@ -286,6 +332,11 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     elevation: 5,
+    maxHeight: '80%',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   modalTitle: {
     fontSize: 18,
@@ -297,8 +348,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   uploadedImage: {
-    width: 200, // Set the width as needed
-    height: 200, // Set the height as needed
+    width: 200, 
+    height: 200, 
     resizeMode: 'cover',
     marginTop: 10,
   },
