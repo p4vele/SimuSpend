@@ -109,7 +109,12 @@ export default function CreditCardsScreen({ navigation }) {
       console.error('Error deleting credit card:', error);
     }
   };
-
+  const calculateTotalExpenses = (creditCardId) => {
+    const expensesForCard = creditCardExpenses.filter((expense) => expense.creditCard === creditCardId);
+    const totalExpenses = expensesForCard.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+    return totalExpenses;
+  };
+  
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Credit Cards</Text>
@@ -165,8 +170,7 @@ export default function CreditCardsScreen({ navigation }) {
             renderItem={({ item }) => (
               <View key={item.id} style={styles.expenseGridItem}>
                 <Text style={styles.expenseDescription}>{item.description}</Text>
-                <Text style={styles.expenseAmount}>Amount: ${item.amount}</Text>
-                {/* Add other details as needed */}
+                <Text style={styles.expenseAmount}>Amount: {item.amount}</Text>
               </View>
             )}
             contentContainerStyle={styles.expenseGridContainer}
@@ -189,8 +193,10 @@ export default function CreditCardsScreen({ navigation }) {
             <Icon name="credit-card" size={30} color="#fff" style={styles.creditCardIcon} />
             <Text style={styles.creditCardNickname}>{item.nickname}</Text>
             <Text style={styles.creditCardLast4Digits}>**** **** **** {item.last4Digits}</Text>
-            <Text style={styles.creditCardPaymentDate}>Payment Date: {item.paymentDate}</Text>
-            <Text style={styles.creditCardAmountLimit}>Amount Limit: ${item.amountLimit}</Text>
+            <Text style={styles.creditCardPaymentDate}>תאריך חיוב: {item.paymentDate}</Text>
+            <Text style={styles.creditCardAmountLimit}>תפוסת מסגרת: {item.amountLimit - calculateTotalExpenses(item.id)}/{item.amountLimit}</Text>
+          
+
             <TouchableOpacity
               onPress={() => deleteCreditCard(item.id)}
               style={styles.deleteButton}
@@ -298,4 +304,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2c3e50',
   },
+  remainingAmount: {
+    fontSize: 12,
+    color: '#fff',
+    marginTop: 5,
+  },
+  
 });
