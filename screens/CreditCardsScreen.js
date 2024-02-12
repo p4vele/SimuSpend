@@ -17,6 +17,11 @@ export default function CreditCardsScreen({ navigation }) {
   const [newAmountLimit, setNewAmountLimit] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const [selectedCreditCard, setSelectedCreditCard] = useState(null);
+  const [isExpensesModalVisible, setIsExpensesModalVisible] = useState(false);
+  const [creditCardExpenses, setCreditCardExpenses] = useState([]);
+
+
   const fetchCreditCards = async () => {
     try {
       if (!user) {
@@ -35,7 +40,26 @@ export default function CreditCardsScreen({ navigation }) {
       console.error('Error fetching credit cards:', error);
     }
   };
-
+  const fetchCreditCardExpenses = async (creditCardId) => {
+    try {
+      if (!user) {
+        return;
+      }
+  
+      const expensesCollection = collection(db, 'users', user.uid, 'expenses');
+      const expensesSnapshot = await getDocs(expensesCollection);
+  
+      if (expensesSnapshot && expensesSnapshot.docs) {
+        const expensesData = expensesSnapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((expense) => expense.creditCard === creditCardId);
+  
+        setCreditCardExpenses(expensesData);
+      }
+    } catch (error) {
+      console.error('Error fetching credit card expenses:', error);
+    }
+  };
   useEffect(() => {
     const loadData = async () => {
       await fetchCreditCards();
@@ -47,7 +71,15 @@ export default function CreditCardsScreen({ navigation }) {
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };
-
+  const toggleExpensesModal = () => {
+    setIsExpensesModalVisible(!isExpensesModalVisible);
+  };
+  const handleCreditCardPress = (creditCardId) => {
+    setSelectedCreditCard(creditCardId);
+    fetchCreditCardExpenses(creditCardId);
+    toggleExpensesModal();
+  };
+  
   const addCreditCard = async () => {
     try {
       const creditCardsCollection = collection(db, 'users', user?.uid, 'creditCards');
@@ -121,6 +153,29 @@ export default function CreditCardsScreen({ navigation }) {
         </View>
       </Modal>
 
+
+      <Modal visible={isExpensesModalVisible} animationType="slide" transparent={true}>
+      <View style={styles.modalContainer}>
+        <View style={[styles.modalContent, { width: '80%' }]}>
+          <Text style={styles.modalTitle}>Expenses for Credit Card</Text>
+          <FlatList
+            data={creditCardExpenses}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            renderItem={({ item }) => (
+              <View key={item.id} style={styles.expenseGridItem}>
+                <Text style={styles.expenseDescription}>{item.description}</Text>
+                <Text style={styles.expenseAmount}>Amount: ${item.amount}</Text>
+                {/* Add other details as needed */}
+              </View>
+            )}
+            contentContainerStyle={styles.expenseGridContainer}
+          />
+          <Button title="Close" type="outline" onPress={toggleExpensesModal} />
+        </View>
+      </View>
+    </Modal>
+
       <FlatList
         data={creditCards}
         keyExtractor={(item) => item.id}
@@ -128,6 +183,8 @@ export default function CreditCardsScreen({ navigation }) {
         renderItem={({ item }) => (
             <TouchableOpacity
             style={styles.creditCardItem}
+            onPress={() => handleCreditCardPress(item.id)}
+
           >
             <Icon name="credit-card" size={30} color="#fff" style={styles.creditCardIcon} />
             <Text style={styles.creditCardNickname}>{item.nickname}</Text>
@@ -219,5 +276,26 @@ const styles = StyleSheet.create({
   },
   creditCardIcon: {
     marginBottom: 10,
+  },
+  expenseGridContainer: {
+    paddingHorizontal: 10,
+    paddingVertical: 15,
+  },
+  expenseGridItem: {
+    flex: 1,
+    backgroundColor: '#ecf0f1',
+    margin: 8,
+    padding: 10,
+    borderRadius: 8,
+    elevation: 2,
+  },
+  expenseDescription: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  expenseAmount: {
+    fontSize: 14,
+    color: '#2c3e50',
   },
 });
