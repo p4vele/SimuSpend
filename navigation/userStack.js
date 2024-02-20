@@ -9,6 +9,7 @@ import IncomesScreen from '../screens/IncomesScreen';
 import ChatScreen from '../screens/ChatScreen';
 import OperationsScreen from '../screens/OperationsScreen';
 import CreditCardsScreen from '../screens/CreditCardsScreen';
+import UploadCsvScreen from '../screens/UploadCsvScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -22,6 +23,7 @@ export default function UserStack() {
         <Tab.Screen name="צאט" component={ChatScreen} />
         <Tab.Screen name="עובר ושב" component={OperationsScreen} />
         <Tab.Screen name="כרטיסי אשראי" component={CreditCardsScreen} />
+        <Tab.Screen name="יבא מאקסל" component={UploadCsvScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
