@@ -95,7 +95,7 @@ const ChatScreen = () => {
       await fetchExpenses();
       const chartData =  await calculateChartData(expenses);
       chartMessage = chartData.map(item => `${item.name}: ₪${item.amount}`).join('\n');
-      chartMessage += '\n זה כל ההוצאות האחרונות שלי לפי קטגוריות עזור לי עם טיפים  קיצר לחסוך\n';
+      chartMessage += '\n התבסס על ההוצאות שהוזנו, ותן לי טיפים ספציפיים איך אני יכול לחסוך יותר כסף, בהתאם להוצאות שלי.\n';
       setMessage(chartMessage);
       
     } catch (error) {
