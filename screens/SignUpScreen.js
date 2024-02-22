@@ -42,41 +42,44 @@ const SignUpScreen = ({ navigation }) => {
         <Image source={require('../assets/logo.png')} style={styles.logo} />
 
         <Input
-          placeholder='Email'
+          placeholder='הזמן כתובת אימייל'
           containerStyle={styles.inputContainer}
           value={email}
           onChangeText={(text) => setEmail(text)}
           leftIcon={<Icon name='envelope' size={16} />}
+          placeholderStyle={{ textAlign: 'right' }}
         />
 
         <Input
-          placeholder='Password'
+          placeholder='הזן סיסמה'
           containerStyle={styles.inputContainer}
           value={password}
           onChangeText={(value) => validateAndSet(value, setPassword)}
           secureTextEntry
           leftIcon={<Icon name='key' size={16} />}
+          placeholderStyle={{ textAlign: 'right' }}
         />
 
         <Input
-          placeholder='Confirm password'
+          placeholder='הזן סיסמה שנית'
           containerStyle={styles.inputContainer}
           value={confirmPassword}
           onChangeText={(value) => validateAndSet(value, setConfirmPassword)}
           secureTextEntry
           leftIcon={<Icon name='key' size={16} />}
           onBlur={() => checkPassword(password, confirmPassword)}
+          placeholderStyle={{ textAlign: 'right' }}
         />
 
         {<Text style={styles.error}>{validationMessage}</Text>}
 
-        <Button title='Sign up' buttonStyle={styles.button} onPress={createAccount} />
+        <Button title='הרשמה' buttonStyle={styles.button} onPress={createAccount} />
 
         <View>
           <Text style={styles.signInText}>
-            Already have an account?
+            משתמש קיים?
             <TouchableOpacity onPress={() => navigation.navigate('Sign In')} style={{ color: 'blue', marginLeft: 10 }}>
-              <Text style={styles.signInLink}>Login here </Text>
+              <Text style={styles.signInLink}>התחבר כאן </Text>
             </TouchableOpacity>
           </Text>
         </View>
@@ -95,7 +98,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)', // Add a semi-transparent white background to improve readability
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', 
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -110,7 +113,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
-    backgroundColor:'green',
+    backgroundColor:'blue',
   },
   error: {
     marginTop: 10,
@@ -120,12 +123,14 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 17,
     textAlign: 'center',
+    color: 'white',
+    
   },
   signInLink: {
     marginTop: 5,
     fontSize: 17,
     textAlign: 'center',
-    color: 'green',
+    color: 'white',
   },
 });
 

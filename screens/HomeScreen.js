@@ -178,11 +178,11 @@ export default function HomeScreen() {
         source={require('../assets/logo.png')}
         style={{ width: 150, height: 150, alignSelf: 'center', resizeMode: 'contain' }}
       />
-      <Text style={{ fontSize:20, marginBottom:20}}>Hello {user?.email}!</Text>
+      <Text style={{ fontSize:20, marginBottom:20,color:'white',}}>Hello {user?.email}!</Text>
 
       <View style={styles.buttonContainer}>
-          <Button style={styles.button} title="Enter Expense" onPress={toggleModal} />
-          <Button style={styles.button} title="Enter Income" onPress={toggleIncomeModal} />
+          <Button style={styles.button} title="הוסף הוצאה" onPress={toggleModal} />
+          <Button style={styles.button} title="הוסף הכנסה" onPress={toggleIncomeModal} />
          
       </View>
 
@@ -191,15 +191,15 @@ export default function HomeScreen() {
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { width: '80%' }]}>
-            <Text style={styles.modalTitle}>Enter Expense</Text>
+            <Text style={styles.modalTitle}>הוסף הוצאה</Text>
             <Input
-              placeholder="Expense Description"
+              placeholder="תיאור"
               value={newExpense}
               onChangeText={(text) => setNewExpense(text)}
               containerStyle={styles.inputContainer}
             />
             <Input
-              placeholder="Expense Amount"
+              placeholder="סכום"
               value={newAmount}
               onChangeText={(text) => setNewAmount(text)}
               keyboardType="numeric"
@@ -213,7 +213,7 @@ export default function HomeScreen() {
               onChange={(event, date) => setDatetime(date.toISOString())}
             />
             <Input
-              placeholder="Number of Payments"
+              placeholder="מספר תשלומים"
               value={numPayments}
               onChangeText={(text) => setNumPayments(text)}
               keyboardType="numeric"
@@ -223,24 +223,24 @@ export default function HomeScreen() {
               selectedValue={selectedExpenseType}
               onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
             >
-              <Picker.Item label="Food" value="food" />
-              <Picker.Item label="Traffic" value="traffic" />
-              <Picker.Item label="Entertainment" value="entertainment" />
-              <Picker.Item label="Maintenance" value="maintenance" />
-              <Picker.Item label="Rent" value="rent" />
-              <Picker.Item label="Insurence" value="insurence" />
-              <Picker.Item label="House Expense" value="houseexpense" />
-              <Picker.Item label="Other" value="other" />
+              <Picker.Item label="מזון ומשקאות" value="food" />
+              <Picker.Item label="תחבורה" value="traffic" />
+              <Picker.Item label="מסעדות" value="resturants" />
+              <Picker.Item label="שירותי תקשורת" value="communications" />
+              <Picker.Item label="אנרגיה" value="energy" />
+              <Picker.Item label="ביטוח" value="insurence" />
+              <Picker.Item label="ריהוט ובית" value="houseexpense" />
+              <Picker.Item label="שונות" value="other" />
             </Picker>
             <Input
-              placeholder="Comment"
+              placeholder="הערות"
               value={comment}
               onChangeText={(text) => setComment(text)}
               containerStyle={styles.inputContainer}
             />
             
-            <Button title="Add Expense" onPress={addExpense} />
-            <Button title="Cancel" type="outline" onPress={toggleModal} />
+            <Button title="הוסף" onPress={addExpense} />
+            <Button title="ביטול" type="outline" onPress={toggleModal} />
           </View>
         </View>
       </Modal>
@@ -249,15 +249,15 @@ export default function HomeScreen() {
        <Modal visible={isIncomeModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { width: '80%' }]}>
-            <Text style={styles.modalTitle}>Enter Income</Text>
+            <Text style={styles.modalTitle}>הוסף הכנסה</Text>
             <Input
-              placeholder="Income Description"
+              placeholder="תיאור"
               value={newIncome}
               onChangeText={(text) => setNewIncome(text)}
               containerStyle={styles.inputContainer}
             />
             <Input
-              placeholder="Income Amount"
+              placeholder="סכום"
               value={incomeAmount}
               onChangeText={(text) => setIncomeAmount(text)}
               keyboardType="numeric"
@@ -274,21 +274,20 @@ export default function HomeScreen() {
               selectedValue={selectedIncomeType}
               onValueChange={(itemValue) => setSelectedIncomeType(itemValue)}
             >
-              <Picker.Item label="Salary" value="salary" />
-              <Picker.Item label="Side Job" value="sidejob" />
-              <Picker.Item label="Transaction" value="transaction" />
-              <Picker.Item label="Gift" value="gift" />
-              <Picker.Item label="Other" value="other" />
+              <Picker.Item label="משכורת" value="salary" />
+              <Picker.Item label="העברה " value="transaction" />
+              <Picker.Item label="מתנה" value="gift" />
+              <Picker.Item label="אחר" value="other" />
             </Picker>
             <Input
-              placeholder="Comment"
+              placeholder="הערות"
               value={incomeComment}
               onChangeText={(text) => setIncomeComment(text)}
               containerStyle={styles.inputContainer}
             />
 
-            <Button title="Add Income" onPress={addIncome} />
-            <Button title="Cancel" type="outline" onPress={toggleIncomeModal} />
+            <Button title="הוסף" onPress={addIncome} />
+            <Button title="ביטול" type="outline" onPress={toggleIncomeModal} />
           </View>
         </View>
       </Modal>
@@ -299,19 +298,19 @@ export default function HomeScreen() {
             onPress={() => signOut(auth)}
             style={styles.signOutButton}
         >
-            <Text style={styles.signOutText}>Sign Out</Text>
+            <Text style={styles.signOutText}>התנתק</Text>
         </TouchableOpacity>
     </View>
     <View style={styles.container}>
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
+    
           <Swiper>
             <View style={styles.slideDeafault}>
               {/* Display expense chart */}
-              <Text style={styles.chartTitle}>Expense Chart</Text>
+              <Text style={styles.chartTitle}>הוצאות</Text>
                 <PieChart
                   data={expenseChartData}
-                  width={350} // Adjusted width
-                  height={150} // Adjusted height
+                  width={350} 
+                  height={150} 
                   chartConfig={{
                     backgroundGradientFrom: '#1E2923',
                     backgroundGradientTo: '#08130D',
@@ -324,7 +323,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.slideDeafault}>
                 {/* Display income chart */}
-                <Text style={styles.chartTitle}>Income Chart</Text>
+                <Text style={styles.chartTitle}>הכנסות</Text>
                     <PieChart
                       data={incomeChartData}
                       width={350} // Adjusted width
@@ -340,12 +339,10 @@ export default function HomeScreen() {
                 />
             </View>
           </Swiper>
-          </ImageBackground>
+          
       </View>
       <View style={styles.operationsScreenContainer}>
-        <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
           <OperationsScreen data={expenses.concat(incomes).sort((a, b) => new Date(b.datetime) - new Date(a.datetime))} />
-        </ImageBackground>
       </View>
     </View>
     </ImageBackground>
@@ -362,16 +359,18 @@ const styles = StyleSheet.create({
     flex: 1,
     width:'100%',
     justifyContent: 'flex-end', 
+    
   },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', 
     alignItems: 'center',
     justifyContent: 'center',
   },
   inputContainer: {
     width: '80%',
     marginTop: 10,
+    direction:'rtl',
   },
   expenseItem: {
     flexDirection: 'row',
@@ -389,6 +388,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listHeader: {
+    
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -412,11 +412,14 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalTitle: {
+    direction:'rtl',
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
+    marginRight: 80,
   },
   headerContainer: {
+    direction:'rtl',
     position: 'absolute',
     top: 0,
     right: 0,
@@ -428,7 +431,7 @@ const styles = StyleSheet.create({
   signOutButton: {
     padding: 10,
     borderRadius: 5,
-    backgroundColor: 'green',
+    backgroundColor: 'blue',
   },
   signOutText: {
     color: 'white',
@@ -443,17 +446,18 @@ const styles = StyleSheet.create({
   },
   
   chartTitle: {
+    direction:'rtl',
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 10,
-    right: 100, 
+    right: 0, 
   },
   slideDeafault:{
     flex:1,
     justifyContent:'center',
     alignItems:'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+    
   },
  
 });

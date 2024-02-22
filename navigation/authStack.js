@@ -11,8 +11,8 @@ export default function AuthStack() {
   return (
     <NavigationContainer>
       <Tab.Navigator>
-        <Tab.Screen name="Sign In" component={SignInScreen} />
-        <Tab.Screen name="Sign Up" component={SignUpScreen} />
+        <Tab.Screen name="התחברות" component={SignInScreen} />
+        <Tab.Screen name="הרשמה" component={SignUpScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );

@@ -32,7 +32,7 @@ const SignInScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Image source={require('../assets/logo.png')}   style={{width: 150, height: 150, alignSelf: 'center', resizeMode: 'contain'}} />
       <Input
-        placeholder='Email'
+        placeholder='הזן כתובת אימייל'
         containerStyle={styles.inputContainer}
         value={email}
         onChangeText={(text) => setEmail(text)}
@@ -40,7 +40,7 @@ const SignInScreen = ({ navigation }) => {
       />
 
       <Input
-        placeholder='Password'
+        placeholder='הזן סיסמה'
         containerStyle={styles.inputContainer}
         value={password}
         onChangeText={(text) => setPassword(text)}
@@ -49,11 +49,11 @@ const SignInScreen = ({ navigation }) => {
       />
       {<Text style={styles.error}>{validationMessage}</Text>}
 
-      <Button title="Sign in" buttonStyle={styles.button} onPress={login} />
+      <Button title="התחבר" buttonStyle={styles.button} onPress={login} />
       <Text style={styles.signUpText}>
-        Don't have an account yet ?
+        עדיין לא נרשמת?
         <TouchableOpacity onPress={() => navigation.navigate('Sign Up')} >
-          <Text style={styles.signUpLink}>Sign up here</Text>
+          <Text style={styles.signUpLink}>הירשם עכשיו</Text>
         </TouchableOpacity>
       </Text>
     </View>
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
-    backgroundColor:'green',
+    backgroundColor:'blue',
     },
   error: {
     marginTop: 10,
@@ -96,12 +96,13 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 17,
     textAlign: 'center',
+    color: 'white',
   },
   signUpLink: {
     marginTop: 5,
     fontSize: 17,
     textAlign: 'center',
-    color: 'green',
+    color: 'white',
   },
 });
 

@@ -69,7 +69,6 @@ export default function OperationsScreen({ navigation }) {
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <View style={styles.container}>
-        <Text style={styles.title}>Operations</Text>
         <FlatList
           data={data}
           keyExtractor={(item) => item.id}
@@ -102,7 +101,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 20,
   },
   title: {
@@ -120,9 +119,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   entryDescription: {
+    direction:'rtl',
     flex: 2,
   },
   entryAmount: {
+    direction:'rtl',
     flex: 1,
   },
   deleteButton: {
@@ -149,6 +150,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   entryGridItem: {
+    direction:'rtl',
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
