@@ -103,8 +103,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   container: {   
-    marginTop:55,
     padding: 25,
+    marginTop:25,
+
   },
   title: {
     fontSize: 20,

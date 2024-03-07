@@ -177,9 +177,13 @@ export default function HomeScreen({navigation }) {
                 style={styles.logo}
             />
         </View>
-      <View style={styles.operationsScreenContainer}>
-          <OperationsScreen data={expenses.concat(incomes).sort((a, b) => new Date(b.datetime) - new Date(a.datetime))} />
-      </View>
+        <TouchableOpacity style={styles.operationsScreenContainer} onPress={() => navigation.navigate('כל התנועות')}>
+          <View style={styles.operationsScreenContainer}>
+            <OperationsScreen 
+              data={expenses.concat(incomes).sort((a, b) => new Date(b.datetime) - new Date(a.datetime))}
+            />
+          </View>
+        </TouchableOpacity>
       <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleModal}>
               <FontAwesome name="plus" size={20} color="white" />
@@ -372,6 +376,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width:'100%',
     justifyContent: 'flex-end', 
+    marginBottom:15,
     
   },
   container: {
@@ -386,6 +391,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.01)', 
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom:15,
+
   },
   inputContainer: {
     width: '80%',

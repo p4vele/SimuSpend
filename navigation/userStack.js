@@ -30,7 +30,7 @@ export default function UserStack() {
         <Tab.Screen name="צאט" component={ChatScreen} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="chat" color={color} size={size} />), headerShown: false }} />
-        <Tab.Screen name="כל התנועות" component={OperationsScreen} options={{headerShown: false}} />
+        <Tab.Screen name="כל התנועות" component={OperationsScreen} options={{ tabBarButton: () => null,   tabBarVisible:false,headerShown: false}} />
         <Tab.Screen name="כרטיסי אשראי" component={CreditCardsScreen} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="credit-card" color={color} size={size} />),  headerShown: false}} />

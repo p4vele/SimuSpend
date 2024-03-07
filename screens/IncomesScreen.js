@@ -9,6 +9,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { PieChart } from 'react-native-chart-kit';
 import { RefreshControl } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 
 const db = getFirestore();
 
@@ -127,8 +128,7 @@ export default function IncomesScreen({ navigation }) {
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
-      <Text style={styles.title}>Incomes</Text>
-      <Button style={{ marginBottom: 25 }} title="Enter Income" onPress={toggleIncomeModal} />
+    
       {incomeChartData.length > 0 && (
         <PieChart
           data={incomeChartData}
@@ -142,23 +142,29 @@ export default function IncomesScreen({ navigation }) {
           accessor="amount"
           backgroundColor="transparent"
           paddingLeft="15"
-          absolute
+          
         />
       )}
-
+      
+      <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.button} onPress={toggleIncomeModal}>
+                <FontAwesome name="plus" size={20} color="white" />
+                <Text style={styles.buttonText}>הוסף הכנסה</Text>
+            </TouchableOpacity>
+      </View>
       {/* Income Modal */}
       <Modal visible={isIncomeModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { width: '80%' }]}>
-            <Text style={styles.modalTitle}>Enter Income</Text>
+            <Text style={styles.modalTitle}>הזן הכנסה</Text>
             <Input
-              placeholder="Income Description"
+              placeholder="הזן תיאור"
               value={newIncome}
               onChangeText={(text) => setNewIncome(text)}
               containerStyle={styles.inputContainer}
             />
             <Input
-              placeholder="Income Amount"
+              placeholder="הזן סכום"
               value={incomeAmount}
               onChangeText={(text) => setIncomeAmount(text)}
               keyboardType="numeric"
@@ -175,21 +181,20 @@ export default function IncomesScreen({ navigation }) {
               selectedValue={selectedIncomeType}
               onValueChange={(itemValue) => setSelectedIncomeType(itemValue)}
             >
-              <Picker.Item label="Salary" value="salary" />
-              <Picker.Item label="Side Job" value="sidejob" />
-              <Picker.Item label="Transaction" value="transaction" />
-              <Picker.Item label="Gift" value="gift" />
-              <Picker.Item label="Other" value="other" />
+              <Picker.Item label="משכורת" value="salary" />
+              <Picker.Item label="העברה" value="transaction" />
+              <Picker.Item label="מתנה" value="gift" />
+              <Picker.Item label="אחר" value="other" />
             </Picker>
             <Input
-              placeholder="Comment"
+              placeholder="הערות"
               value={incomeComment}
               onChangeText={(text) => setIncomeComment(text)}
               containerStyle={styles.inputContainer}
             />
 
-            <Button title="Add Income" onPress={addIncome} />
-            <Button title="Cancel" type="outline" onPress={toggleIncomeModal} />
+            <Button title="הוספה" onPress={addIncome} />
+            <Button title="ביטול" type="outline" onPress={toggleIncomeModal} />
           </View>
         </View>
       </Modal>
@@ -198,12 +203,20 @@ export default function IncomesScreen({ navigation }) {
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.incomeGridItem}
-            
-          >
-            <Text style={styles.incomeDescription}>{item.description}</Text>
-            <Text style={styles.incomeAmount}>{item.amount}</Text>
+          <TouchableOpacity style={styles.incomeGridItem}>
+            <View style={styles.amountContainer}>
+                <Icon
+                  name='arrow-up'
+                  size={20}
+                  color='green'
+                  
+                />
+            </View>
+            <View style={styles.entryInfo}>
+                <Text style={styles.incomeDescription}>{item.description}</Text>
+                <Text style={styles.incomeAmount}>{item.amount}</Text>
+                <Text style={styles.entryComment}>{item.comment}</Text>
+            </View>
             <TouchableOpacity
               onPress={() => deleteIncome(item.id)}
               style={styles.deleteButton}
@@ -226,7 +239,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     padding: 20,
     marginTop:25,
   },
@@ -245,10 +258,20 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   incomeDescription: {
-    flex: 2,
+    marginRight:10,
+    direction: 'ltr',
+    textAlign: 'right',
+    fontWeight: 'bold',
   },
   incomeAmount: {
-    flex: 1,
+    marginRight:10,
+    direction: 'ltr',
+    textAlign: 'right',
+  },
+  entryComment: {
+    
+    direction: 'ltr',
+    textAlign: 'right',
   },
   deleteButton: {
     padding: 5,
@@ -268,12 +291,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
+    marginLeft:100,
   },
   inputContainer: {
     width: '80%',
     marginTop: 10,
   },
   incomeGridItem: {
+    direction: 'rtl',
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -281,9 +306,32 @@ const styles = StyleSheet.create({
     margin: 5,
     padding: 10,
     borderRadius: 10,
-    backgroundColor: '#fff', 
     elevation: 5,
     borderWidth: 1,
     borderColor: '#ccc',
+    backgroundColor:'#fff',
+  },
+  button: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    direction:'rtl',
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  buttonText: {
+      marginLeft: 5,
+      color: 'white',
+      fontSize: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  entryInfo: {
+    flexDirection: 'column',
+    flex: 1,
+    textAlign: 'right',
   },
 });

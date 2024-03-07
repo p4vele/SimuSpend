@@ -241,14 +241,14 @@ export default function ExpensesScreen({ navigation }) {
                   selectedValue={selectedExpenseType}
                   onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
                 >
-                   <Picker.Item label="Food" value="food" />
-                  <Picker.Item label="Traffic" value="traffic" />
-                  <Picker.Item label="Entertainment" value="entertainment" />
-                  <Picker.Item label="Maintenance" value="maintenance" />
-                  <Picker.Item label="Rent" value="rent" />
-                  <Picker.Item label="Insurence" value="insurence" />
-                  <Picker.Item label="House Expense" value="houseexpense" />
-                  <Picker.Item label="Other" value="other" />
+                  <Picker.Item label="מזון ומשקאות" value="food" />
+                  <Picker.Item label="תחבורה" value="traffic" />
+                  <Picker.Item label="מסעדות" value="resturants" />
+                  <Picker.Item label="שירותי תקשורת" value="communications" />
+                  <Picker.Item label="אנרגיה" value="energy" />
+                  <Picker.Item label="ביטוח" value="insurence" />
+                  <Picker.Item label="ריהוט ובית" value="houseexpense" />
+                  <Picker.Item label="שונות" value="other" />
                 </Picker>
                 <Text style={{ fontSize:18, paddingLeft: 45 }}>אמצעי תשלום</Text>
 
