@@ -23,7 +23,7 @@ const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1F
     const newChartData = Object.keys(typesData).map((type, index) => ({
       name: type,
       amount: typesData[type],
-      color: colorScale[index % colorScale.length], // Use modulo to cycle through the color scale
+      color: colorScale[index % colorScale.length], 
       legendFontColor: '#7F7F7F',
       legendFontSize: 15,
     }));
@@ -228,6 +228,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     padding: 20,
+    marginTop:25,
   },
   title: {
     fontSize: 20,

@@ -313,7 +313,7 @@ export default function HomeScreen({navigation }) {
         </TouchableOpacity>
 
       </View>
-      <View style={styles.container}>
+      <View style={styles.slidecontainer}>
         <Swiper>
           <View style={styles.slideDeafault}>
             {/* Display expense chart */}
@@ -375,6 +375,13 @@ const styles = StyleSheet.create({
     
   },
   container: {
+    flex: 1,
+    marginTop:25,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)', 
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  slidecontainer: {
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.01)', 
     alignItems: 'center',
@@ -501,7 +508,7 @@ const styles = StyleSheet.create({
       },
       shadowOpacity: 0.25,
       shadowRadius: 220,
-      elevation: 5,
+      
   },
   greetingText: {
       fontSize: 10,
