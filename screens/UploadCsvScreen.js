@@ -7,6 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import * as FileSystem from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import Papa from 'papaparse';
@@ -255,11 +256,59 @@ export default function UploadCsvScreen() {
 };
 
     return (
-        <View>
-            <Button title="Discount" onPress={uploadCSVDiscount} />
-            <Button title="Visa Cal" onPress={uploadCSVvisaCal} />
-            <Button title="Visa Max" onPress={uploadCSVvisaMax} />
-            
-        </View>
+        <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
+            <View style={styles.container}>
+                <Text style={styles.text}> בחר את סוג הויזה שלך והעלה קובץ </Text>
+                <TouchableOpacity style={styles.buttonContainer} onPress={uploadCSVDiscount}>
+                    <MaterialCommunityIcons name="upload" size={24} color="white" />
+                    <Text style={styles.buttonText}>דיסקונט</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.buttonContainer} onPress={uploadCSVvisaCal}>
+                    <MaterialCommunityIcons name="upload" size={24} color="white" />
+                    <Text style={styles.buttonText}>ויזה כאל</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.buttonContainer} onPress={uploadCSVvisaMax}>
+                    <MaterialCommunityIcons name="upload" size={24} color="white" />
+                    <Text style={styles.buttonText}>ויזה מקס</Text>
+                </TouchableOpacity>
+                
+            </View>
+        </ImageBackground>
     );
 }
+const styles = StyleSheet.create({
+    background: {
+        flex: 1,
+        resizeMode: 'cover',
+        justifyContent: 'center',
+    },
+    container: {
+        flex: 1,
+        paddingTop: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    text: {
+        marginBottom: 20,
+        fontSize: 20,
+        fontWeight: 'bold',
+        color:'white',
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '80%',
+        marginBottom: 10,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        borderRadius: 10,
+    },
+    buttonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: 'white',
+    },
+})

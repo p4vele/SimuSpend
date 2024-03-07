@@ -34,7 +34,7 @@ export default function UserStack() {
         <Tab.Screen name="כרטיסי אשראי" component={CreditCardsScreen} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="credit-card" color={color} size={size} />),  headerShown: false}} />
-        <Tab.Screen name="יבא מאקסל" component={UploadCsvScreen} options={{  tabBarButton: () => null,   tabBarVisible:false }}/>
+        <Tab.Screen name="יבא מאקסל" component={UploadCsvScreen} options={{  tabBarButton: () => null,   tabBarVisible:false,headerShown: false }}/>
       </Tab.Navigator>
     </NavigationContainer>
   );
