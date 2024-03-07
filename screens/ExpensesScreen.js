@@ -10,6 +10,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { RefreshControl } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
+import { FontAwesome } from '@expo/vector-icons';
 
 const db = getFirestore();
 
@@ -159,9 +160,7 @@ export default function ExpensesScreen({ navigation }) {
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
-      <Text style={styles.title}>Expenses</Text>
-      <Button style={{ marginBottom: 25,}} title="Enter Expense" onPress={toggleModal} />
-
+      
       {chartData.length > 0 && (
           <PieChart
             data={chartData}
@@ -179,7 +178,20 @@ export default function ExpensesScreen({ navigation }) {
           />
         )}
 
+        <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.button} onPress={toggleModal}>
+                <FontAwesome name="plus" size={20} color="white" />
+                <Text style={styles.buttonText}>הוסף הוצאה</Text>
+            </TouchableOpacity>
       
+            <TouchableOpacity 
+                style={styles.button} 
+                onPress={() => navigation.navigate('יבא מאקסל')}>
+                <FontAwesome name="plus" size={20} color="white" />
+                <Text style={styles.buttonText}>יבא מאקסל</Text>
+            </TouchableOpacity>
+
+        </View>
       {/**expense modal */}
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
           <View style={styles.modalContainer}>
@@ -259,30 +271,38 @@ export default function ExpensesScreen({ navigation }) {
           </View>
         </Modal>
              
-            
-              
-
+          
       <FlatList
-        data={expenses}
-        keyExtractor={(item) => item.id}
-        
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.gridItem}
-            
-          >
-            <Text style={styles.expenseDescription}>{item.description}</Text>
-            <Text style={styles.expenseAmount}>{item.amount}</Text>
-            <TouchableOpacity
+          data={expenses}
+          keyExtractor={(item) => item.id}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={[styles.entryGridItem]}>
+              <View style={styles.amountContainer}>
+                <Icon
+                  name='arrow-down'
+                  size={20}
+                  color='red'
+                  
+                />
+              </View>
+              <View style={styles.entryInfo}>
+                <Text style={styles.entryDescription}>{item.description}</Text>
+                <Text style={styles.entryAmount}>
+                  {item.amount}
+                </Text>
+                <Text style={styles.entryComment}>{item.comment}</Text>
+              </View>
+
+              <TouchableOpacity
               onPress={() => deleteExpense(item.id)}
               style={styles.deleteButton}
             >
               <Icon name="times" size={15} color="red" />
             </TouchableOpacity>
-          </TouchableOpacity>
-        )}
-      />
+            </TouchableOpacity>
+          )}
+        />
     </View>
     </ImageBackground>
   );
@@ -296,32 +316,17 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     padding: 20,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
+    color:'white',
+    marginLeft:145,
   },
-  expenseItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    borderBottomWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 10,
-  },
-  expenseDescription: {
-    flex: 2,
-  },
-  expenseAmount: {
-    flex: 1,
-  },
-  deleteButton: {
-    padding: 5,
-  },
+
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -354,6 +359,60 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   gridItem: {
+    direction: 'rtl',
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 5,
+    padding: 10,
+    borderRadius: 10,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor:'#fff',
+  },
+  button: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    direction:'rtl',
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  buttonText: {
+      marginLeft: 5,
+      color: 'white',
+      fontSize: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  entryInfo: {
+    flexDirection: 'column',
+    flex: 1,
+    textAlign: 'right',
+  },
+  entryDescription: {
+    marginRight:10,
+    direction: 'ltr',
+    textAlign: 'right',
+    fontWeight: 'bold',
+  },
+  entryAmount: {
+    marginRight:10,
+    direction: 'ltr',
+    textAlign: 'right',
+  },
+  entryComment: {
+    
+    direction: 'ltr',
+    textAlign: 'right',
+  },
+  entryGridItem: {
+    direction: 'rtl',
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -361,9 +420,22 @@ const styles = StyleSheet.create({
     margin: 5,
     padding: 10,
     borderRadius: 10,
-    backgroundColor: '#fff', 
     elevation: 5,
     borderWidth: 1,
     borderColor: '#ccc',
+    backgroundColor:'#fff',
+  },
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  entryComment:{
+    direction: 'ltr',
+    textAlign: 'right',
+    
+  },
+  deleteButton: {
+    direction: 'ltr',
+    padding: 5,
   },
 });

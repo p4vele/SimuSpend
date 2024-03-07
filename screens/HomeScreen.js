@@ -7,20 +7,19 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; 
+import { FontAwesome } from '@expo/vector-icons';
+
 import { LineChart, PieChart } from 'react-native-chart-kit';
 import  Swiper from 'react-native-swiper'
 import OperationsScreen from './OperationsScreen';
-
-import * as FileSystem from 'expo-file-system';
-import * as DocumentPicker from 'expo-document-picker';
-import Papa from 'papaparse';
 
 const auth = getAuth();
 const db = getFirestore();
 
 
 
-export default function HomeScreen() {
+export default function HomeScreen({navigation }) {
   const { user } = useAuthentication();
 
   const [expenses, setExpenses] = useState([]);
@@ -42,8 +41,6 @@ export default function HomeScreen() {
 
   const [expenseChartData, setExpenseChartData] = useState([]);
   const [incomeChartData, setIncomeChartData] = useState([]);
-
-
 
 
   const fetchExpenses = async () => {
@@ -174,16 +171,31 @@ export default function HomeScreen() {
     
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
-      <Image
-        source={require('../assets/logo.png')}
-        style={{ width: 150, height: 150, alignSelf: 'center', resizeMode: 'contain' }}
-      />
-      <Text style={{ fontSize:20, marginBottom:20,color:'white',}}>Hello {user?.email}!</Text>
-
+        <View style={styles.logoContainer}>
+            <Image
+                source={require('../assets/logo.png')}
+                style={styles.logo}
+            />
+        </View>
+      <View style={styles.operationsScreenContainer}>
+          <OperationsScreen data={expenses.concat(incomes).sort((a, b) => new Date(b.datetime) - new Date(a.datetime))} />
+      </View>
       <View style={styles.buttonContainer}>
-          <Button style={styles.button} title="הוסף הוצאה" onPress={toggleModal} />
-          <Button style={styles.button} title="הוסף הכנסה" onPress={toggleIncomeModal} />
-         
+          <TouchableOpacity style={styles.button} onPress={toggleModal}>
+              <FontAwesome name="plus" size={20} color="white" />
+              <Text style={styles.buttonText}>הוסף הוצאה</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={toggleIncomeModal}>
+              <FontAwesome name="plus" size={20} color="white" />
+              <Text style={styles.buttonText}>הוסף הכנסה</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+              style={styles.button} 
+              onPress={() => navigation.navigate('יבא מאקסל')}>
+              <FontAwesome name="plus" size={20} color="white" />
+              <Text style={styles.buttonText}>יבא מאקסל</Text>
+          </TouchableOpacity>
+
       </View>
 
 
@@ -294,55 +306,56 @@ export default function HomeScreen() {
       
 
       <View style={styles.headerContainer}>
-        <TouchableOpacity
-            onPress={() => signOut(auth)}
-            style={styles.signOutButton}
-        >
+        <TouchableOpacity onPress={() => signOut(auth)} style={styles.signOutButton}>
+            <FontAwesome name="sign-out" size={20} color="white" />
             <Text style={styles.signOutText}>התנתק</Text>
+            <Text style={styles.greetingText}>שלום {user?.email}!</Text>
         </TouchableOpacity>
-    </View>
-    <View style={styles.container}>
-    
-          <Swiper>
-            <View style={styles.slideDeafault}>
-              {/* Display expense chart */}
-              <Text style={styles.chartTitle}>הוצאות</Text>
-                <PieChart
-                  data={expenseChartData}
-                  width={350} 
-                  height={150} 
-                  chartConfig={{
-                    backgroundGradientFrom: '#1E2923',
-                    backgroundGradientTo: '#08130D',
-                    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-                  }}
-                  accessor="amount"
-                  backgroundColor="transparent"
-                  
-                />
-            </View>
-            <View style={styles.slideDeafault}>
-                {/* Display income chart */}
-                <Text style={styles.chartTitle}>הכנסות</Text>
-                    <PieChart
-                      data={incomeChartData}
-                      width={350} // Adjusted width
-                      height={150} // Adjusted height
-                      chartConfig={{
-                        backgroundGradientFrom: '#1E2923',
-                        backgroundGradientTo: '#08130D',
-                        color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-                      }}
-                      accessor="amount"
-                      backgroundColor="transparent"
-                      
-                />
-            </View>
-          </Swiper>
-          
+
       </View>
-      <View style={styles.operationsScreenContainer}>
-          <OperationsScreen data={expenses.concat(incomes).sort((a, b) => new Date(b.datetime) - new Date(a.datetime))} />
+      <View style={styles.container}>
+        <Swiper>
+          <View style={styles.slideDeafault}>
+            {/* Display expense chart */}
+            <Text style={styles.chartTitle}>הוצאות</Text>
+            {expenseChartData.length > 0 ? (
+              <PieChart
+                data={expenseChartData}
+                width={350}
+                height={150}
+                chartConfig={{
+                  backgroundGradientFrom: '#1E2923',
+                  backgroundGradientTo: '#08130D',
+                  color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+                }}
+                accessor="amount"
+                backgroundColor="transparent"
+              />
+            ) : (
+              <Text>No expense data available</Text>
+            )}
+          </View>
+          <View style={styles.slideDeafault}>
+            {/* Display income chart */}
+            <Text style={styles.chartTitle}>הכנסות</Text>
+            {incomeChartData.length > 0 ? (
+              <PieChart
+                data={incomeChartData}
+                width={350}
+                height={150}
+                chartConfig={{
+                  backgroundGradientFrom: '#1E2923',
+                  backgroundGradientTo: '#08130D',
+                  color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+                }}
+                accessor="amount"
+                backgroundColor="transparent"
+              />
+            ) : (
+              <Text>No income data available</Text>
+            )}
+          </View>
+        </Swiper>
       </View>
     </View>
     </ImageBackground>
@@ -363,7 +376,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+    backgroundColor: 'rgba(255, 255, 255, 0.01)', 
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -431,10 +444,12 @@ const styles = StyleSheet.create({
   signOutButton: {
     padding: 10,
     borderRadius: 5,
-    backgroundColor: 'blue',
+    justifyContent: 'center',
+    alignItems:'flex-start',
   },
   signOutText: {
     color: 'white',
+    fontSize:10,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -442,7 +457,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    direction:'rtl',
+    padding: 10,
+    borderRadius: 5,
     marginHorizontal: 5,
+  },
+  buttonText: {
+      marginLeft: 5,
+      color: 'white',
+      fontSize: 16,
   },
   
   chartTitle: {
@@ -452,6 +477,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
     right: 0, 
+    color:'white',
   },
   slideDeafault:{
     flex:1,
@@ -459,6 +485,28 @@ const styles = StyleSheet.create({
     alignItems:'center',
     
   },
- 
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 250,
+  },
+  logo: {
+      width: 100,
+      height: 100,
+      resizeMode: 'contain',
+      shadowColor: 'white',
+      shadowOffset: {
+        width: 1,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 220,
+      elevation: 5,
+  },
+  greetingText: {
+      fontSize: 10,
+      marginTop: 10,
+      color: 'white',
+  },
 });
             

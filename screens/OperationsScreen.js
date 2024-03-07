@@ -15,15 +15,6 @@ const db = getFirestore();
 export default function OperationsScreen({ navigation }) {
   const { user } = useAuthentication();
   const [data, setData] = useState([]);
-  const [newEntry, setNewEntry] = useState('');
-  const [newAmount, setNewAmount] = useState('');
-  const [datetime, setDatetime] = useState(new Date().toISOString());
-  const [numPayments, setNumPayments] = useState('');
-  const [selectedType, setSelectedType] = useState('expense');
-  const [comment, setComment] = useState('');
-  const [expenses, setExpenses] = useState([]);
-  const [incomes, setIncomes] = useState([]);
-  const [mergedData, setMergedData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
@@ -44,7 +35,7 @@ export default function OperationsScreen({ navigation }) {
         const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data(), type: 'expense' }));
         const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data(), type: 'income' }));
 
-        const mergedData = [...expensesData, ...incomesData].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+        const mergedData = [...expensesData, ...incomesData].sort((a, b) => new Date(b.datetime) - new Date(a.datetime)).reverse();
         setData(mergedData);
         console.log("fetch data operations");
       }
@@ -66,9 +57,11 @@ export default function OperationsScreen({ navigation }) {
     await fetchData();
     setRefreshing(false);
   };
+
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <View style={styles.container}>
+        <Text style={styles.title}>תנועות אחרונות</Text>
         <FlatList
           data={data}
           keyExtractor={(item) => item.id}
@@ -77,14 +70,24 @@ export default function OperationsScreen({ navigation }) {
             <TouchableOpacity
               style={[
                 styles.entryGridItem,
-                { backgroundColor: item.type === 'income' ? '#8eff8e' : '#ff8e8e' },
+                { backgroundColor: item.type === 'income' ? '#b3ffb3' : '#ffb3b3' },
               ]}
-
             >
-              <Text style={styles.entryDescription}>{item.description}</Text>
-              <Text style={[styles.entryAmount, { color: item.type === 'income' ? 'green' : 'red' }]}>
-                {item.amount}
-              </Text>
+              <View style={styles.amountContainer}>
+                <Icon
+                  name={item.type === 'income' ? 'arrow-up' : 'arrow-down'}
+                  size={20}
+                  color={item.type === 'income' ? 'green' : 'red'}
+                />
+              </View>
+              <View style={styles.entryInfo}>
+                <Text style={styles.entryDescription}>{item.description}</Text>
+                <Text style={[styles.entryAmount, { color: item.type === 'income' ? 'green' : 'red' }]}>
+                  {item.amount}
+                </Text>
+                <Text style={styles.entryComment}>{item.comment}</Text>
+              </View>
+            
             </TouchableOpacity>
           )}
         />
@@ -99,58 +102,39 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     justifyContent: 'center',
   },
-  container: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: 20,
+  container: {   
+    padding: 25,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
+    textAlign: 'right',
+    color:'white',
   },
-  entryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    borderBottomWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 10,
+  entryInfo: {
+    flexDirection: 'column',
+    flex: 1,
+    textAlign: 'right',
   },
   entryDescription: {
-    direction:'rtl',
-    flex: 2,
+    marginRight:10,
+    fontWeight: 'bold',
+    direction: 'ltr',
+    textAlign: 'right',
   },
   entryAmount: {
-    direction:'rtl',
-    flex: 1,
+    marginRight:10,
+    direction: 'ltr',
+    textAlign: 'right',
   },
-  deleteButton: {
-    padding: 5,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  inputContainer: {
-    width: '80%',
-    marginTop: 10,
+  entryComment: {
+    marginRight:10,
+    direction: 'ltr',
+    textAlign: 'right',
   },
   entryGridItem: {
-    direction:'rtl',
+    direction: 'rtl',
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -158,9 +142,12 @@ const styles = StyleSheet.create({
     margin: 5,
     padding: 10,
     borderRadius: 10,
-    backgroundColor: '#fff', // Set your desired background color
     elevation: 5,
     borderWidth: 1,
     borderColor: '#ccc',
+  },
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
