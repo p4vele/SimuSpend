@@ -1,6 +1,6 @@
 // ExpensesScreen.js
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity ,Modal,ImageBackground} from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity ,Modal,ImageBackground,ScrollView,TouchableWithoutFeedback, Keyboard} from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc,addDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -40,7 +40,7 @@ export default function ExpensesScreen({ navigation }) {
   const [newAmount, setNewAmount] = useState('');
   const [datetime, setDatetime] = useState(new Date().toISOString());
   const [numPayments, setNumPayments] = useState('');
-  const [selectedExpenseType, setSelectedExpenseType] = useState('food');
+  const [selectedExpenseType, setSelectedExpenseType] = useState('מזון ומשקאות');
   const [comment, setComment] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -48,7 +48,7 @@ export default function ExpensesScreen({ navigation }) {
   const [chartData, setChartData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  const [selectedCreditCard, setSelectedCreditCard] = useState('cash');
+  const [selectedCreditCard, setSelectedCreditCard] = useState('מזומן');
   const [creditCards, setCreditCards] = useState([]); 
 
   const fetchExpenses = async () => {
@@ -193,82 +193,82 @@ export default function ExpensesScreen({ navigation }) {
 
         </View>
       {/**expense modal */}
-      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
-          <View style={styles.modalContainer}>
-            <View style={[styles.modalContent, { flexDirection: 'row' }]}>
-              {/* First Column */}
-              <View style={{ flex: 1, paddingRight: 10 }}>
-                <Text style={styles.modalTitle}>Enter Expense</Text>
-                <Input
-                  placeholder="תיאור"
-                  value={newExpense}
-                  onChangeText={(text) => setNewExpense(text)}
-                  containerStyle={styles.inputContainer}
-                />
-                <Input
-                  placeholder="סכום"
-                  value={newAmount}
-                  onChangeText={(text) => setNewAmount(text)}
-                  keyboardType="numeric"
-                  containerStyle={styles.inputContainer}
-                />
-                <DateTimePicker
-                  style={styles.inputContainer}
-                  value={new Date(datetime)}
-                  mode="date"
-                  display="default"
-                  onChange={(event, date) => setDatetime(date.toISOString())}
-                />
-                <Input
-                  placeholder="מספר תשלומים"
-                  value={numPayments}
-                  onChangeText={(text) => setNumPayments(text)}
-                  keyboardType="numeric"
-                  containerStyle={styles.inputContainer}
-                />
-                <Input
-                  placeholder="הערה"
-                  value={comment}
-                  onChangeText={(text) => setComment(text)}
-                  containerStyle={styles.inputContainer}
-                />
+      <Modal visible={isModalVisible} animationType="slide" transparent={true} keyboardShouldPersistTaps='handled'>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>הוסף הוצאה</Text>
+            <View style={styles.inputContainer}>
+              <Input
+                placeholder="תיאור"
+                value={newExpense}
+                onChangeText={(text) => setNewExpense(text)}
+              />
+              <Input
+                placeholder="סכום"
+                value={newAmount}
+                onChangeText={(text) => setNewAmount(text)}
+                keyboardType="numeric"
+              />
+              <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+              <DateTimePicker
+                value={new Date(datetime)}
+                mode="date"
+                display="default"
+                onChange={(event, date) => setDatetime(date.toISOString())}
+              />
               </View>
-
-              {/* Second Column */}
-              <View style={{ flex: 1, paddingLeft: 10 }}>
-                <Text style={{ fontSize:18, paddingLeft: 50 }}>סוג הוצאה</Text>
-                <Picker
-                  selectedValue={selectedExpenseType}
-                  onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
-                >
-                  <Picker.Item label="מזון ומשקאות" value="food" />
-                  <Picker.Item label="תחבורה" value="traffic" />
-                  <Picker.Item label="מסעדות" value="resturants" />
-                  <Picker.Item label="שירותי תקשורת" value="communications" />
-                  <Picker.Item label="אנרגיה" value="energy" />
-                  <Picker.Item label="ביטוח" value="insurence" />
-                  <Picker.Item label="ריהוט ובית" value="houseexpense" />
-                  <Picker.Item label="שונות" value="other" />
-                </Picker>
-                <Text style={{ fontSize:18, paddingLeft: 45 }}>אמצעי תשלום</Text>
-
-                <Picker
+              <Input
+                placeholder="מספר תשלומים"
+                value={numPayments}
+                onChangeText={(text) => setNumPayments(text)}
+                keyboardType="numeric"
+              />
+              <Input
+                placeholder="הערה"
+                value={comment}
+                onChangeText={(text) => setComment(text)}
+              />
+            </View>
+            <View style={styles.pickerTextBox}>
+            <Text style={styles.pickerLabel}>אמצעי תשלום</Text>
+            <Text style={styles.pickerLabel}>סוג הוצאה</Text>
+            </View>
+            <View style={styles.pickerContainer}>
+              
+              <Picker
+                selectedValue={selectedExpenseType}
+                onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
+                style={styles.picker}
+                itemStyle={styles.pickerItem}
+              >
+                  <Picker.Item label="מזון ומשקאות" value="מזון ומשקאות" />
+                  <Picker.Item label="תחבורה" value="תחבורה" />
+                  <Picker.Item label="מסעדות" value="מסעדות" />
+                  <Picker.Item label="שירותי תקשורת" value="שירותי תקשורת" />
+                  <Picker.Item label="אנרגיה" value="אנרגיה" />
+                  <Picker.Item label="ביטוח" value="ביטוח" />
+                  <Picker.Item label="ריהוט ובית" value="ריהוט ובית" />
+                  <Picker.Item label="שונות" value="שונות" />
+              </Picker>
+              <Picker
                   selectedValue={selectedCreditCard}
                   onValueChange={(itemValue) => setSelectedCreditCard(itemValue)}
-                >
-                  <Picker.Item label="Cash" value="cash" />
-                    {creditCards.map((card) => (
-                      <Picker.Item key={card.id} label={card.nickname} value={card.id} />
-                    ))}
-                </Picker>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-
-                  <Button title="Add Expense" onPress={addExpense} />
-                  <Button title="Cancel" type="outline" onPress={toggleModal} />
-                </View>
+                  style={styles.picker}
+              >
+                  <Picker.Item label="מזומן" value="מזומן" />
+                     {creditCards.map((card) => (
+                        <Picker.Item key={card.id} label={card.nickname} value={card.id} />
+                      ))}
+                  </Picker>
+            </View>
+              <View style={styles.buttonContainer}>
+                <Button title="הוספה" onPress={addExpense} />
+                <Button title="ביטול" type="outline" onPress={toggleModal} />
               </View>
             </View>
           </View>
+          </TouchableWithoutFeedback>
         </Modal>
              
           
@@ -328,37 +328,6 @@ const styles = StyleSheet.create({
     marginLeft:145,
   },
 
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-    maxHeight: '80%',
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  inputContainer: {
-    width: '80%',
-    marginTop: 10,
-  },
-  uploadedImage: {
-    width: 200, 
-    height: 200, 
-    resizeMode: 'cover',
-    marginTop: 10,
-  },
   gridItem: {
     direction: 'rtl',
     flex: 1,
@@ -439,4 +408,55 @@ const styles = StyleSheet.create({
     direction: 'ltr',
     padding: 5,
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    elevation: 5,
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 10,
+  },
+  pickerContainer: {
+    flexDirection: 'row', 
+    justifyContent: 'flex-start', 
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  pickerTextBox:{
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-around',
+  },
+  pickerLabel: {
+    fontSize: 18,
+    textAlign: 'right',
+    marginRight: 10,
+    fontWeight: 'bold',
+  },
+  pickerItem: {
+    fontSize: 12, 
+  },
+  picker: {
+    width: '45%',
+    marginLeft: 10,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+    
+  },
+ 
 });

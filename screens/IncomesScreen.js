@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity ,Modal,ImageBackground} from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity ,Modal,ImageBackground,TouchableWithoutFeedback,Keyboard} from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc,addDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -38,7 +38,7 @@ export default function IncomesScreen({ navigation }) {
   const [newIncome, setNewIncome] = useState('');
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeDatetime, setIncomeDatetime] = useState(new Date().toISOString());
-  const [selectedIncomeType, setSelectedIncomeType] = useState('salary');
+  const [selectedIncomeType, setSelectedIncomeType] = useState('משכורת');
   const [incomeComment, setIncomeComment] = useState('');
   const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
   const [incomeChartData, setIncomeChartData] = useState([]);
@@ -154,6 +154,7 @@ export default function IncomesScreen({ navigation }) {
       </View>
       {/* Income Modal */}
       <Modal visible={isIncomeModalVisible} animationType="slide" transparent={true}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { width: '80%' }]}>
             <Text style={styles.modalTitle}>הזן הכנסה</Text>
@@ -170,6 +171,7 @@ export default function IncomesScreen({ navigation }) {
               keyboardType="numeric"
               containerStyle={styles.inputContainer}
             />
+            <View style={{marginRight:50, justifyContent: 'center', alignItems: 'center' }}>
             <DateTimePicker
               style={styles.inputContainer}
               value={new Date(incomeDatetime)}
@@ -177,14 +179,15 @@ export default function IncomesScreen({ navigation }) {
               display="default"
               onChange={(event, date) => setIncomeDatetime(date.toISOString())}
             />
+            </View>
             <Picker
               selectedValue={selectedIncomeType}
               onValueChange={(itemValue) => setSelectedIncomeType(itemValue)}
             >
-              <Picker.Item label="משכורת" value="salary" />
-              <Picker.Item label="העברה" value="transaction" />
-              <Picker.Item label="מתנה" value="gift" />
-              <Picker.Item label="אחר" value="other" />
+              <Picker.Item label="משכורת" value="משכורת" />
+              <Picker.Item label="העברה" value="העברה" />
+              <Picker.Item label="מתנה" value="מתנה" />
+              <Picker.Item label="אחר" value="אחר" />
             </Picker>
             <Input
               placeholder="הערות"
@@ -197,6 +200,7 @@ export default function IncomesScreen({ navigation }) {
             <Button title="ביטול" type="outline" onPress={toggleIncomeModal} />
           </View>
         </View>
+        </TouchableWithoutFeedback>
       </Modal>
       <FlatList
         data={incomes}

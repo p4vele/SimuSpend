@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, Modal, TouchableOpacity, Image,ImageBackground,Container, Content, } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Modal, TouchableOpacity, Image,ImageBackground,TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Button, Input} from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
@@ -27,15 +27,17 @@ export default function HomeScreen({navigation }) {
   const [newAmount, setNewAmount] = useState('');
   const [datetime, setDatetime] = useState(new Date().toISOString());
   const [numPayments, setNumPayments] = useState('');
-  const [selectedExpenseType, setSelectedExpenseType] = useState('food');
+  const [selectedExpenseType, setSelectedExpenseType] = useState('מזון ומשקאות');
   const [comment, setComment] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedCreditCard, setSelectedCreditCard] = useState('מזומן');
+  const [creditCards, setCreditCards] = useState([]); 
 
   const [incomes, setIncomes] = useState([]);
   const [newIncome, setNewIncome] = useState('');
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeDatetime, setIncomeDatetime] = useState(new Date().toISOString());
-  const [selectedIncomeType, setSelectedIncomeType] = useState('salary');
+  const [selectedIncomeType, setSelectedIncomeType] = useState('משכורת');
   const [incomeComment, setIncomeComment] = useState('');
   const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
 
@@ -73,9 +75,28 @@ export default function HomeScreen({navigation }) {
     if (user) {
       fetchExpenses();
       fetchIncomes();
+      fetchCreditCards();
+
     }
   }, [user]);
+  const fetchCreditCards = async () => {
+    try {
+      if (!user) {
+        console.log("no user");
+        return;
+      }
 
+      const creditCardsCollection = collection(db, 'users', user.uid, 'creditCards');
+      const creditCardsSnapshot = await getDocs(creditCardsCollection);
+
+      if (creditCardsSnapshot && creditCardsSnapshot.docs) {
+        const creditCardsData = creditCardsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setCreditCards(creditCardsData);
+      }
+    } catch (error) {
+      console.error('Error fetching credit cards:', error);
+    }
+  };
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };
@@ -130,6 +151,7 @@ export default function HomeScreen({navigation }) {
         numPayments: parseInt(numPayments, 10) || 0,
         type: selectedExpenseType,
         comment,
+        creditCard: selectedCreditCard,
       });
       setNewExpense('');
       setNewAmount('');
@@ -204,65 +226,88 @@ export default function HomeScreen({navigation }) {
 
 
       {/**expense modal */}
-      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+      <Modal visible={isModalVisible} animationType="slide" transparent={true} keyboardShouldPersistTaps='handled'>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { width: '80%' }]}>
+          <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>הוסף הוצאה</Text>
-            <Input
-              placeholder="תיאור"
-              value={newExpense}
-              onChangeText={(text) => setNewExpense(text)}
-              containerStyle={styles.inputContainer}
-            />
-            <Input
-              placeholder="סכום"
-              value={newAmount}
-              onChangeText={(text) => setNewAmount(text)}
-              keyboardType="numeric"
-              containerStyle={styles.inputContainer}
-            />
-            <DateTimePicker
-              style={styles.inputContainer}
-              value={new Date(datetime)}
-              mode="date"
-              display="default"
-              onChange={(event, date) => setDatetime(date.toISOString())}
-            />
-            <Input
-              placeholder="מספר תשלומים"
-              value={numPayments}
-              onChangeText={(text) => setNumPayments(text)}
-              keyboardType="numeric"
-              containerStyle={styles.inputContainer}
-            />
-            <Picker
-              selectedValue={selectedExpenseType}
-              onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
-            >
-              <Picker.Item label="מזון ומשקאות" value="food" />
-              <Picker.Item label="תחבורה" value="traffic" />
-              <Picker.Item label="מסעדות" value="resturants" />
-              <Picker.Item label="שירותי תקשורת" value="communications" />
-              <Picker.Item label="אנרגיה" value="energy" />
-              <Picker.Item label="ביטוח" value="insurence" />
-              <Picker.Item label="ריהוט ובית" value="houseexpense" />
-              <Picker.Item label="שונות" value="other" />
-            </Picker>
-            <Input
-              placeholder="הערות"
-              value={comment}
-              onChangeText={(text) => setComment(text)}
-              containerStyle={styles.inputContainer}
-            />
-            
-            <Button title="הוסף" onPress={addExpense} />
-            <Button title="ביטול" type="outline" onPress={toggleModal} />
+            <View style={styles.inputContainer}>
+              <Input
+                placeholder="תיאור"
+                value={newExpense}
+                onChangeText={(text) => setNewExpense(text)}
+              />
+              <Input
+                placeholder="סכום"
+                value={newAmount}
+                onChangeText={(text) => setNewAmount(text)}
+                keyboardType="numeric"
+              />
+              <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+              <DateTimePicker
+                value={new Date(datetime)}
+                mode="date"
+                display="default"
+                onChange={(event, date) => setDatetime(date.toISOString())}
+              />
+              </View>
+              <Input
+                placeholder="מספר תשלומים"
+                value={numPayments}
+                onChangeText={(text) => setNumPayments(text)}
+                keyboardType="numeric"
+              />
+              <Input
+                placeholder="הערה"
+                value={comment}
+                onChangeText={(text) => setComment(text)}
+              />
+            </View>
+            <View style={styles.pickerTextBox}>
+            <Text style={styles.pickerLabel}>אמצעי תשלום</Text>
+            <Text style={styles.pickerLabel}>סוג הוצאה</Text>
+            </View>
+            <View style={styles.pickerContainer}>
+              
+              <Picker
+                selectedValue={selectedExpenseType}
+                onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
+                style={styles.picker}
+                itemStyle={styles.pickerItem}
+              >
+                  <Picker.Item label="מזון ומשקאות" value="מזון ומשקאות" />
+                  <Picker.Item label="תחבורה" value="תחבורה" />
+                  <Picker.Item label="מסעדות" value="מסעדות" />
+                  <Picker.Item label="שירותי תקשורת" value="שירותי תקשורת" />
+                  <Picker.Item label="אנרגיה" value="אנרגיה" />
+                  <Picker.Item label="ביטוח" value="ביטוח" />
+                  <Picker.Item label="ריהוט ובית" value="ריהוט ובית" />
+                  <Picker.Item label="שונות" value="שונות" />
+              </Picker>
+              <Picker
+                  selectedValue={selectedCreditCard}
+                  onValueChange={(itemValue) => setSelectedCreditCard(itemValue)}
+                  style={styles.picker}
+              >
+                  <Picker.Item label="מזומן" value="מזומן" />
+                     {creditCards.map((card) => (
+                        <Picker.Item key={card.id} label={card.nickname} value={card.id} />
+                      ))}
+                  </Picker>
+            </View>
+              <View style={styles.buttonContainer}>
+                <Button title="הוספה" onPress={addExpense} />
+                <Button title="ביטול" type="outline" onPress={toggleModal} />
+              </View>
+            </View>
           </View>
-        </View>
-      </Modal>
+          </TouchableWithoutFeedback>
+        </Modal>
+             
       
        {/* Income Modal */}
        <Modal visible={isIncomeModalVisible} animationType="slide" transparent={true}>
+       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { width: '80%' }]}>
             <Text style={styles.modalTitle}>הוסף הכנסה</Text>
@@ -279,6 +324,7 @@ export default function HomeScreen({navigation }) {
               keyboardType="numeric"
               containerStyle={styles.inputContainer}
             />
+            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
             <DateTimePicker
               style={styles.inputContainer}
               value={new Date(incomeDatetime)}
@@ -286,14 +332,15 @@ export default function HomeScreen({navigation }) {
               display="default"
               onChange={(event, date) => setIncomeDatetime(date.toISOString())}
             />
+            </View>
             <Picker
               selectedValue={selectedIncomeType}
               onValueChange={(itemValue) => setSelectedIncomeType(itemValue)}
             >
-              <Picker.Item label="משכורת" value="salary" />
-              <Picker.Item label="העברה " value="transaction" />
-              <Picker.Item label="מתנה" value="gift" />
-              <Picker.Item label="אחר" value="other" />
+              <Picker.Item label="משכורת" value="משכורת" />
+              <Picker.Item label="העברה" value="העברה" />
+              <Picker.Item label="מתנה" value="מתנה" />
+              <Picker.Item label="אחר" value="אחר" />
             </Picker>
             <Input
               placeholder="הערות"
@@ -302,10 +349,11 @@ export default function HomeScreen({navigation }) {
               containerStyle={styles.inputContainer}
             />
 
-            <Button title="הוסף" onPress={addIncome} />
+            <Button title="הוספה" onPress={addIncome} />
             <Button title="ביטול" type="outline" onPress={toggleIncomeModal} />
           </View>
         </View>
+        </TouchableWithoutFeedback>
       </Modal>
       
 
@@ -394,11 +442,6 @@ const styles = StyleSheet.create({
     marginBottom:15,
 
   },
-  inputContainer: {
-    width: '80%',
-    marginTop: 10,
-    direction:'rtl',
-  },
   expenseItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -427,24 +470,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 15,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-  },
-  modalTitle: {
-    direction:'rtl',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    marginRight: 80,
-  },
+  
   headerContainer: {
     direction:'rtl',
     position: 'absolute',
@@ -522,5 +548,50 @@ const styles = StyleSheet.create({
       marginTop: 10,
       color: 'white',
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    elevation: 5,
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 10,
+  },
+  pickerContainer: {
+    flexDirection: 'row', 
+    justifyContent: 'flex-start', 
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  pickerTextBox:{
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-around',
+  },
+  pickerLabel: {
+    fontSize: 18,
+    textAlign: 'right',
+    marginRight: 10,
+    fontWeight: 'bold',
+  },
+  pickerItem: {
+    fontSize: 12, 
+  },
+  picker: {
+    width: '45%',
+    marginLeft: 10,
+  },
+  
 });
             
