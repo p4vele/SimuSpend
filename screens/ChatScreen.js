@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { View, Text, TextInput, Button, ScrollView, StyleSheet,KeyboardAvoidingView,Platform  } from 'react-native';
+import { View, Text, TextInput, Button, ScrollView, StyleSheet,KeyboardAvoidingView,TouchableOpacity ,ImageBackground } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc } from 'firebase/firestore';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; 
+import { FontAwesome } from '@expo/vector-icons';
 
 const db = getFirestore();
 
@@ -13,11 +15,17 @@ const ChatScreen = () => {
   const [expenses, setExpenses] = useState([]);
   const [chartData, setChartData] = useState([]);
   const inputRef = useRef(null); 
+  const scrollViewRef = useRef(null);
 
   useEffect(() => {
-    
+    setChatMessages([
+      { role: 'assistant', content: "שלום! אני פה כדי לעזור לך עם התקציב וההוצאות שלך. \nשאלו אותי כל שאלה הקשורה לפיננסים או בחרו מן האופציות להודעות מוכנות" }
+    ]);
     inputRef.current.focus();
   }, []);
+  useEffect(() => {
+    scrollViewRef.current.scrollToEnd({ animated: true });
+  }, [chatMessages]);
 
   const sendMessage = async () => {
     try {
@@ -45,6 +53,7 @@ const ChatScreen = () => {
       setChatMessages((prevMessages) => [...prevMessages, assistantMessage]);
 
       setMessage('');
+
     } catch (error) {
       console.error('Error sending message to ChatGPT:', error.response ? error.response.data : error.message);
     }
@@ -103,21 +112,29 @@ const ChatScreen = () => {
     }
   };
   return (
+    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={'padding'}
-      keyboardVerticalOffset={100 } 
+      keyboardVerticalOffset={20 } 
     >
-      <ScrollView style={styles.chatContainer}>
+      <ScrollView ref={scrollViewRef}
+        style={styles.chatContainer}
+        contentContainerStyle={styles.chatContentContainer}>
         {chatMessages.map((msg, index) => (
-          <Text key={index} style={msg.role === 'assistant' ? styles.assistantMessage : styles.userMessage}>
-            {msg.role === 'user' ? 'User: ' : 'Assistant: '}{msg.content}
-          </Text>
+          <View key={index} style={msg.role === 'assistant' ? styles.assistantContainer : styles.userContainer}>
+            <Text style={msg.role === 'assistant' ? [styles.assistantMessage, styles.boldRole] : styles.userMessage}>
+              {msg.role === 'user' ? 'אני: ' : 'בוט פיננסי: '}{msg.content}
+            </Text>
+          </View>
         ))}
       </ScrollView>
 
       <View style={styles.predefinedMessageButton}>
-        <Button title="קריאת הוצאות" onPress={setPredefinedMessageExpenses} />
+      <TouchableOpacity onPress={setPredefinedMessageExpenses}>
+        <MaterialCommunityIcons name="trending-down" size={24} color="#007bff" style={styles.icon} />
+        <Text style={styles.buttonTitle}>קריאת הוצאות</Text>
+      </TouchableOpacity>
       </View>
 
       <View style={styles.inputContainer}>
@@ -129,49 +146,83 @@ const ChatScreen = () => {
           value={message}
           onChangeText={(text) => setMessage(text)}
         />
-        <Button title="שלח" onPress={sendMessage} />
+        <TouchableOpacity onPress={sendMessage}>
+          <MaterialCommunityIcons name="send" size={20} color="#007bff" />
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
+    </ImageBackground>
+    
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
     marginTop:25,
   },
   chatContainer: {
     flex: 1,
-    marginBottom: 10,
+  },
+  chatContentContainer: {
+    paddingVertical: 10,
+    
+  },
+  userContainer: {
+    alignSelf: 'flex-end', 
+    marginRight: 10, 
+    marginBottom: 5, 
+  },
+  assistantContainer: {
+    alignSelf: 'flex-start', 
+    marginLeft: 10, 
+    marginBottom: 5, 
   },
   userMessage: {
     color: '#000',
     backgroundColor: '#e0e0e0',
     padding: 10,
-    borderRadius: 8,
     marginBottom: 8,
+    textAlign: 'right',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ccc', 
+    overflow: 'hidden',
+    
   },
   assistantMessage: {
     color: '#fff',
     backgroundColor: '#4caf50',
     padding: 10,
-    borderRadius: 8,
     marginBottom: 8,
     alignSelf: 'flex-start',
+    textAlign: 'right',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ccc', 
+    overflow: 'hidden',
   },
   predefinedMessageButton: {
     marginBottom: 10,
+    alignContent:'center',
+    alignItems:'center',
+    
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    maxHeight:'80%',
+    height:'auto',
     
   },
   input: {
     flex: 1,
-    height: 40,
+    height: 'auto',
     borderColor: 'gray',
     borderWidth: 1,
     marginBottom: 10,
@@ -179,6 +230,15 @@ const styles = StyleSheet.create({
     marginRight: 10,
     borderRadius: 8,
     backgroundColor: '#fff',
+  },
+  icon:{
+    marginLeft:25,
+  },
+  boldRole: {
+    fontWeight: 'bold', 
+  },
+  buttonTitle:{
+    color:'white',
   },
 });
 
