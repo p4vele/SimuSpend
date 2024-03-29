@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Modal , ImageBackground} from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc } from 'firebase/firestore';
 import { Button, Input } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
-
+import { FontAwesome } from '@expo/vector-icons';
 
 const db = getFirestore();
 
@@ -75,9 +75,12 @@ export default function CreditCardsScreen({ navigation }) {
     setIsExpensesModalVisible(!isExpensesModalVisible);
   };
   const handleCreditCardPress = (creditCardId) => {
+    console.log("Credit card pressed:", creditCardId);
     setSelectedCreditCard(creditCardId);
     fetchCreditCardExpenses(creditCardId);
     toggleExpensesModal();
+    console.log("done:", creditCardId);
+
   };
   
   const addCreditCard = async () => {
@@ -116,111 +119,140 @@ export default function CreditCardsScreen({ navigation }) {
   };
   
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Credit Cards</Text>
-      <Button style={{ marginBottom: 25 }} title="Add Credit Card" onPress={toggleModal} />
+    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
+      <View style={styles.container}>
+        
+         <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+          <View style={styles.modalContainer}>
+            <View style={[styles.modalContent, { width: '80%' }]}>
+              <Text style={styles.modalTitle}>Add Credit Card</Text>
+              <Input
+                placeholder="Nickname"
+                value={newNickname}
+                onChangeText={(text) => setNewNickname(text)}
+                containerStyle={styles.inputContainer}
+              />
+              <Input
+                placeholder="Last 4 Digits"
+                value={newLast4Digits}
+                onChangeText={(text) => setNewLast4Digits(text)}
+                keyboardType="numeric"
+                containerStyle={styles.inputContainer}
+              />
+              <Input
+                placeholder="Payment Date"
+                value={newPaymentDate}
+                onChangeText={(text) => setNewPaymentDate(text)}
+                containerStyle={styles.inputContainer}
+              />
+              <Input
+                placeholder="Amount Limit"
+                value={newAmountLimit}
+                onChangeText={(text) => setNewAmountLimit(text)}
+                keyboardType="numeric"
+                containerStyle={styles.inputContainer}
+              />
 
-      {/**credit card modal */}
-      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { width: '80%' }]}>
-            <Text style={styles.modalTitle}>Add Credit Card</Text>
-            <Input
-              placeholder="Nickname"
-              value={newNickname}
-              onChangeText={(text) => setNewNickname(text)}
-              containerStyle={styles.inputContainer}
-            />
-            <Input
-              placeholder="Last 4 Digits"
-              value={newLast4Digits}
-              onChangeText={(text) => setNewLast4Digits(text)}
-              keyboardType="numeric"
-              containerStyle={styles.inputContainer}
-            />
-            <Input
-              placeholder="Payment Date"
-              value={newPaymentDate}
-              onChangeText={(text) => setNewPaymentDate(text)}
-              containerStyle={styles.inputContainer}
-            />
-            <Input
-              placeholder="Amount Limit"
-              value={newAmountLimit}
-              onChangeText={(text) => setNewAmountLimit(text)}
-              keyboardType="numeric"
-              containerStyle={styles.inputContainer}
-            />
-
-            <Button title="Add Credit Card" onPress={addCreditCard} />
-            <Button title="Cancel" type="outline" onPress={toggleModal} />
+              <Button title="Add Credit Card" onPress={addCreditCard} />
+              <Button title="Cancel" type="outline" onPress={toggleModal} />
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+
+        <Modal visible={isExpensesModalVisible} animationType="slide" transparent={true}>
+          <View style={styles.modalContainer}>
+            <View style={[styles.modalContent, { width: '80%' }]}>
+              <Text style={styles.modalTitle}>הוצאות עבור כרטיס זה</Text>
+              <FlatList
+                data={creditCardExpenses}
+                keyExtractor={(item) => item.id}
+                numColumns={2}
+                renderItem={({ item }) => (
+                  <View key={item.id} style={styles.expenseGridItem}>
+                    <View style={styles.amountContainer}>
+                        <Icon
+                          name='arrow-down'
+                          size={20}
+                          color='red'
+                          
+                        />
+                      </View>
+                      <View style={styles.entryInfo}>
+                        <Text style={styles.entryDescription}>{item.description}</Text>
+                        <Text style={styles.entryAmount}>
+                          {item.amount}
+                        </Text>
+                        <Text style={styles.entryComment}>{item.comment}</Text>
+                      </View>
+
+                      <TouchableOpacity
+                      onPress={() => deleteExpense(item.id)}
+                      style={styles.deleteButton}
+                    >
+                      <Icon name="times" size={15} color="red" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                contentContainerStyle={styles.expenseGridContainer}
+              />
+              <Button title="סגירה" type="outline" onPress={toggleExpensesModal} />
+            </View>
+          </View>
+        </Modal>
 
 
-      <Modal visible={isExpensesModalVisible} animationType="slide" transparent={true}>
-      <View style={styles.modalContainer}>
-        <View style={[styles.modalContent, { width: '80%' }]}>
-          <Text style={styles.modalTitle}>Expenses for Credit Card</Text>
-          <FlatList
-            data={creditCardExpenses}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            renderItem={({ item }) => (
-              <View key={item.id} style={styles.expenseGridItem}>
-                <Text style={styles.expenseDescription}>{item.description}</Text>
-                <Text style={styles.expenseAmount}>Amount: {item.amount}</Text>
-              </View>
-            )}
-            contentContainerStyle={styles.expenseGridContainer}
-          />
-          <Button title="Close" type="outline" onPress={toggleExpensesModal} />
-        </View>
-      </View>
-    </Modal>
-
-      <FlatList
-        data={creditCards}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        renderItem={({ item }) => (
+        <FlatList
+          data={creditCards}
+          keyExtractor={(item) => item.id}
+          numColumns={1}
+          renderItem={({ item }) => (
             <TouchableOpacity
             style={styles.creditCardItem}
-            onPress={() => handleCreditCardPress(item.id)}
-
-          >
-            <Icon name="credit-card" size={30} color="#fff" style={styles.creditCardIcon} />
-            <Text style={styles.creditCardNickname}>{item.nickname}</Text>
-            <Text style={styles.creditCardLast4Digits}>**** **** **** {item.last4Digits}</Text>
-            <Text style={styles.creditCardPaymentDate}>תאריך חיוב: {item.paymentDate}</Text>
-            <Text style={styles.creditCardAmountLimit}>תפוסת מסגרת: {item.amountLimit - calculateTotalExpenses(item.id)}/{item.amountLimit}</Text>
-          
-
-            <TouchableOpacity
-              onPress={() => deleteCreditCard(item.id)}
-              style={styles.deleteButton}
-            >
-              <Text style={{ color: 'red' }}>Delete</Text>
+            onPress={() => handleCreditCardPress(item.id)}>
+              <ImageBackground source={require('../assets/credit_card_background.png')} style={styles.cardBackground}>
+                
+                <Text style={styles.creditCardLast4Digits}>**** **** **** {item.last4Digits}</Text>
+                <View style={styles.cardFooter}>
+                  <Text style={styles.creditCardPaymentDate}>תאריך חיוב: {item.paymentDate}</Text>
+                  <Text style={styles.creditCardAmountLimit}>תפוסת מסגרת: {item.amountLimit}</Text>
+                  
+                </View>
+                <Text style={styles.creditCardNickname}> {item.nickname}</Text>
+                <TouchableOpacity onPress={() => deleteCreditCard(item.id)} style={styles.deleteButton}>
+                  <Icon name="times" size={15} color="red" />
+                </TouchableOpacity>
+              </ImageBackground>
             </TouchableOpacity>
-          </TouchableOpacity>
-        )}
-      />
-    </View>
+
+          )}
+        />
+        <TouchableOpacity style={styles.button} onPress={toggleModal}>
+              <FontAwesome name="plus" size={20} color="white" />
+              <Text style={styles.buttonText}>הוסף כרטיס אשראי</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     padding: 20,
-    marginTop:25,
+    marginTop: 25,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: 'white',
+    textAlign: 'center',
   },
   modalContainer: {
     flex: 1,
@@ -237,78 +269,135 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
+    textAlign: 'center',
   },
   inputContainer: {
     width: '80%',
     marginTop: 10,
   },
   creditCardItem: {
-    flex: 1,
-    flexDirection: 'column', 
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    margin: 10,
-    padding: 15,
+    marginVertical: 10,
+    padding:'auto',
     borderRadius: 10,
-    backgroundColor: '#3498db', 
     elevation: 5,
-    borderWidth: 1,
-    borderColor: '#2980b9', 
-    width: '45%', 
+    
   },
   creditCardNickname: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff', 
+    color: '#fff',
+    textAlign: 'right',
+    marginRight: 140,
   },
   creditCardLast4Digits: {
     fontSize: 14,
-    color: '#fff', 
+    color: '#fff',
+    textAlign: 'center',
   },
   creditCardPaymentDate: {
     fontSize: 12,
-    color: '#fff', 
+    color: '#fff',
+    textAlign: 'center',
   },
   creditCardAmountLimit: {
     fontSize: 12,
-    color: '#fff', 
+    color: '#fff',
+    textAlign: 'center',
   },
   deleteButton: {
-    padding: 8,
     backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#c0392b', 
+    borderColor: '#c0392b',
     borderRadius: 5,
-    marginTop: 10,
   },
-  creditCardIcon: {
-    marginBottom: 10,
+  button: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    direction:'rtl',
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  buttonText: {
+      marginLeft: 5,
+      color: 'white',
+      fontSize: 16,
+  },
+  cardBackground: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  visaIcon: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+  },
+  creditCardLast4Digits: {
+    fontSize: 20,
+    color: '#fff',
+    textAlign: 'right',
+    marginRight: 20,
+    marginTop: 120,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 20,
+  },
+  creditCardPaymentDate: {
+    fontSize: 12,
+    color: '#fff',
+  },
+  creditCardAmountLimit: {
+    fontSize: 12,
+    color: '#fff',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
   },
   expenseGridContainer: {
     paddingHorizontal: 10,
     paddingVertical: 15,
   },
   expenseGridItem: {
+    direction: 'rtl',
     flex: 1,
-    backgroundColor: '#ecf0f1',
-    margin: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 5,
     padding: 10,
-    borderRadius: 8,
-    elevation: 2,
+    borderRadius: 10,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor:'#fff',
   },
-  expenseDescription: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  expenseAmount: {
-    fontSize: 14,
-    color: '#2c3e50',
+  entryComment:{
+    direction: 'ltr',
+    textAlign: 'right',
+    
+  },
+  deleteButton: {
+    direction: 'ltr',
+    padding: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   remainingAmount: {
     fontSize: 12,
     color: '#fff',
     marginTop: 5,
   },
-  
 });
