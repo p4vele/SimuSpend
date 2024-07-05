@@ -8,12 +8,12 @@ import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; 
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome,FontAwesomeIcon } from '@expo/vector-icons';
 
 import { LineChart, PieChart } from 'react-native-chart-kit';
 import  Swiper from 'react-native-swiper'
 import OperationsScreen from './OperationsScreen';
-
+import NotificationsScreen from './NotificationsScreen';
 const auth = getAuth();
 const db = getFirestore();
 
@@ -44,7 +44,73 @@ export default function HomeScreen({navigation }) {
   const [expenseChartData, setExpenseChartData] = useState([]);
   const [incomeChartData, setIncomeChartData] = useState([]);
 
+  const [notifications, setNotifications] = useState([]);
+  const [refresh, setRefresh] = useState(false);
+  const today = new Date().toLocaleDateString('he-IL', {
+    weekday: 'long',
+    
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
+  const fetchNotifications = async () => {
+    try {
+      const notificationsCollection = collection(db, 'users', user?.uid, 'notifications');
+      const notificationsSnapshot = await getDocs(notificationsCollection);
+      const notificationsData = notificationsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setNotifications(notificationsData);
+      console.log("fetch notifications home ");
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+  
+  const filterNotifications = () => {
+    const currentDate = new Date(); // Current date
+    
+    const filteredNotifications = notifications.filter(notification => {
+      let eventDate;
+      
+      if (notification.date && notification.date.seconds) {
+        eventDate = new Date(notification.date.seconds * 1000); // Convert Firebase timestamp to milliseconds
+      } else {
+        console.log('Invalid date format:', notification.date);
+        return false;
+      }
+  
+      let reminderDate;
+      
+      switch (notification.reminderDate) {
+        case '1month':
+          reminderDate = new Date(eventDate);
+          reminderDate.setMonth(eventDate.getMonth() - 1);
+          break;
+        case '1week':
+          reminderDate = new Date(eventDate);
+          reminderDate.setDate(eventDate.getDate() - 7);
+          break;
+        case '3days':
+          reminderDate = new Date(eventDate);
+          reminderDate.setDate(eventDate.getDate() - 3);
+          break;
+        default:
+          console.log('Invalid reminder date');
+          return false;
+      }
+  
+      // Ensure currentDate is within the range of reminderDate and eventDate
+      return currentDate >= reminderDate && currentDate <= eventDate;
+    });
+  
+    console.log("filteredNotifications", filteredNotifications);
+    return filteredNotifications;
+  };
+  
+  
+  
+  
+  
   const fetchExpenses = async () => {
     try {
       const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
@@ -76,9 +142,13 @@ export default function HomeScreen({navigation }) {
       fetchExpenses();
       fetchIncomes();
       fetchCreditCards();
+      fetchNotifications();
 
     }
-  }, [user]);
+  }, [user,refresh]);
+  
+  const relevantNotifications = filterNotifications();
+ 
   const fetchCreditCards = async () => {
     try {
       if (!user) {
@@ -198,7 +268,9 @@ export default function HomeScreen({navigation }) {
                 source={require('../assets/logo.png')}
                 style={styles.logo}
             />
+            
         </View>
+        
         <TouchableOpacity style={styles.operationsScreenContainer} onPress={() => navigation.navigate('כל התנועות')}>
           <View style={styles.operationsScreenContainer}>
             <OperationsScreen 
@@ -206,6 +278,27 @@ export default function HomeScreen({navigation }) {
             />
           </View>
         </TouchableOpacity>
+        <View style={styles.container2}>
+          <Text style={styles.notificationTitle} >תזכורות</Text>
+          <FlatList
+            data={relevantNotifications}
+            keyExtractor={(item) => item.id}
+            horizontal
+            renderItem={({ item }) => {
+              const dateObject = new Date(item.date.seconds * 1000);
+              const formattedDate = `${dateObject.getDate()}/${dateObject.getMonth() + 1}/${dateObject.getFullYear()}`;
+
+              return (
+                <View style={styles.notificationItem}>
+                  <Text style={styles.notificationName}>{item.name}</Text>
+                  <Text style={styles.notificationDescription}>{item.description}</Text>
+                  <Text style={styles.notificationDate}>{formattedDate}</Text>
+                </View>
+              );
+            }}
+          />
+        </View>
+        
       <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleModal}>
               <FontAwesome name="plus" size={20} color="white" />
@@ -221,8 +314,9 @@ export default function HomeScreen({navigation }) {
               <FontAwesome name="plus" size={20} color="white" />
               <Text style={styles.buttonText}>יבא מאקסל</Text>
           </TouchableOpacity>
-
+              
       </View>
+      
 
 
       {/**expense modal */}
@@ -361,13 +455,21 @@ export default function HomeScreen({navigation }) {
         <TouchableOpacity onPress={() => signOut(auth)} style={styles.signOutButton}>
             <FontAwesome name="sign-out" size={20} color="white" />
             <Text style={styles.signOutText}>התנתק</Text>
-            <Text style={styles.greetingText}>שלום {user?.email}!</Text>
+            
         </TouchableOpacity>
-
+        <TouchableOpacity style={styles.button} onPress={() => setRefresh(prev => !prev)}>
+               <MaterialCommunityIcons name="refresh" color='white' size='20' />
+        </TouchableOpacity>
+        
       </View>
-      <View style={styles.slidecontainer}>
+      <View style={styles.headerContainer2}>
+
+            <Text style={styles.greetingText}> {today}</Text>
+            <Text style={styles.greetingText}>שלום {user?.email}!</Text>
+      </View>
+      <View style={styles.container2}>
         <Swiper>
-          <View style={styles.slideDeafault}>
+          <View style={styles.slideDefault}>
             {/* Display expense chart */}
             <Text style={styles.chartTitle}>הוצאות</Text>
             {expenseChartData.length > 0 ? (
@@ -387,7 +489,7 @@ export default function HomeScreen({navigation }) {
               <Text>No expense data available</Text>
             )}
           </View>
-          <View style={styles.slideDeafault}>
+          <View style={styles.slideDefault}>
             {/* Display income chart */}
             <Text style={styles.chartTitle}>הכנסות</Text>
             {incomeChartData.length > 0 ? (
@@ -414,123 +516,144 @@ export default function HomeScreen({navigation }) {
     );
    }
             
-const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
-    justifyContent: 'center',
-  },
-  operationsScreenContainer: {
-    flex: 1,
-    width:'100%',
-    justifyContent: 'flex-end', 
-    marginBottom:15,
-    
-  },
-  container: {
-    flex: 1,
-    marginTop:25,
-    backgroundColor: 'rgba(255, 255, 255, 0.01)', 
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  slidecontainer: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.01)', 
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom:15,
-
-  },
-  expenseItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    borderBottomWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 10,
-  },
-  expenseDescription: {
-    flex: 2,
-  },
-  expenseAmount: {
-    flex: 1,
-  },
-  listHeader: {
-    
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-    marginTop: 10,
-    paddingHorizontal: 10,
-  },
-  headerText: {
-    fontWeight: 'bold',
-    fontSize: 15,
-  },
-  
-  headerContainer: {
-    direction:'rtl',
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    zIndex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    margin: 10,
-  },
-  signOutButton: {
-    padding: 10,
-    borderRadius: 5,
-    justifyContent: 'center',
-    alignItems:'flex-start',
-  },
-  signOutText: {
-    color: 'white',
-    fontSize:10,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  button: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    direction:'rtl',
-    padding: 10,
-    borderRadius: 5,
-    marginHorizontal: 5,
-  },
-  buttonText: {
-      marginLeft: 5,
+   const styles = StyleSheet.create({
+    background: {
+      flex: 1,
+      resizeMode: 'cover',
+      justifyContent: 'center',
+    },
+    operationsScreenContainer: {
+      flex: 1,
+      flexGrow:4,
+      width: '100%',
+      justifyContent: 'flex-end',
+      
+    },
+    container: {
+      flex: 1,
+      marginTop: 25,
+      backgroundColor: 'rgba(255, 255, 255, 0.01)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    container2: {
+      flex:1,
+      flexGrow:3,
+      backgroundColor: 'rgba(255, 255, 255, 0.01)',
+      alignItems: 'center',
+      justifyContent: 'flex-start',  
+     
+     },
+    slidecontainer: {
+      flex: 1,
+      flexGrow:1,
+      backgroundColor: 'rgba(255, 255, 255, 0.01)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 15,
+    },
+    expenseItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 10,
+      borderBottomWidth: 1,
+      borderColor: '#ccc',
+      paddingVertical: 10,
+    },
+    expenseDescription: {
+      flex: 2,
+    },
+    expenseAmount: {
+      flex: 1,
+    },
+    listHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10,
+      marginTop: 10,
+      paddingHorizontal: 10,
+    },
+    headerText: {
+      fontWeight: 'bold',
+      fontSize: 15,
+    },
+    headerContainer: {
+      direction: 'rtl',
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      zIndex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      margin: 10,
+    },
+    headerContainer2: {
+      direction: 'rtl',
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      marginRight:15,
+      flexDirection: 'column',
+      alignItems: 'center',
+      margin: 50,
+    },
+    signOutButton: {
+      padding: 10,
+      borderRadius: 5,
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+    },
+    signOutText: {
+      color: 'white',
+      fontSize: 10,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around', 
+      flexGrow: 1,
+    },
+    button: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: 10,
+      borderRadius: 5,
+      marginHorizontal: 5,
+    },
+    buttonText: {
+     
       color: 'white',
       fontSize: 16,
-  },
-  
-  chartTitle: {
-    direction:'rtl',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-    right: 0, 
-    color:'white',
-  },
-  slideDeafault:{
-    flex:1,
-    justifyContent:'center',
-    alignItems:'center',
-    
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 250,
-  },
-  logo: {
+    },
+    chartTitle: {
+      direction: 'rtl',
+      fontSize: 18,
+      fontWeight: 'bold',
+      
+      color: 'white',
+      textAlign: 'center',
+    },
+    notificationTitle: {
+      direction: 'rtl',
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 10,
+      color: 'white',
+      textAlign: 'center',
+    },
+    slideDefault: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: '100%', 
+    },
+    logoContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginRight: 250,
+    },
+    logo: {
       width: 100,
       height: 100,
       resizeMode: 'contain',
@@ -541,57 +664,90 @@ const styles = StyleSheet.create({
       },
       shadowOpacity: 0.25,
       shadowRadius: 220,
-      
-  },
-  greetingText: {
+    },
+    greetingText: {
       fontSize: 10,
       marginTop: 10,
       color: 'white',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-    maxHeight: '80%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  inputContainer: {
-    marginBottom: 10,
-  },
-  pickerContainer: {
-    flexDirection: 'row', 
-    justifyContent: 'flex-start', 
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  pickerTextBox:{
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-around',
-  },
-  pickerLabel: {
-    fontSize: 18,
-    textAlign: 'right',
-    marginRight: 10,
-    fontWeight: 'bold',
-  },
-  pickerItem: {
-    fontSize: 12, 
-  },
-  picker: {
-    width: '45%',
-    marginLeft: 10,
-  },
+    },
+    modalContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      padding: 20,
+      borderRadius: 10,
+      elevation: 5,
+      maxWidth: '90%', 
+      maxHeight: '80%', 
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 10,
+      textAlign: 'center',
+    },
+    inputContainer: {
+      marginBottom: 10,
+    },
+    pickerContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between', 
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    pickerTextBox: {
+      flexDirection: 'row-reverse',
+      justifyContent: 'space-around',
+    },
+    pickerLabel: {
+      fontSize: 18,
+      textAlign: 'right',
+      marginRight: 10,
+      fontWeight: 'bold',
+    },
+    pickerItem: {
+      fontSize: 12,
+    },
+    picker: {
+      width: '45%',
+      marginLeft: 10,
+    },
+    notificationItem: {
+      flexDirection: 'column',
+      backgroundColor: '#FFFFFF',
+      borderRadius: 10,
+      elevation: 5,
+      marginBottom: 10,
+      marginRight: 10,
+      padding: 15,
+      borderWidth: 1,
+      borderColor: '#CCCCCC',
+      width: 100,
+      height: 100,
+    },
+    notificationName: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 5,
+      textAlign: 'right',
+      color: '#333333',
+    },
+    notificationDescription: {
+      fontSize: 16,
+      textAlign: 'right',
+      color: '#666666',
+    },
+    notificationDate: {
+      fontSize: 14,
+      textAlign: 'right',
+      color: '#999999',
+    },
+    swip : {
+      flexGrow: 1,
+     
+    },
+  });
   
-});
-            
