@@ -26,6 +26,10 @@ export default function LoansScreen({ navigation }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [isDateModalVisible, setIsDateModalVisible] = useState(false);
+  const [chosenDate, setChosenDate] = useState('');
+  const [loanToAddNotification, setLoanToAddNotification] = useState(null);
+
   const fetchLoans = async () => {
     try {
       if (!user) {
@@ -104,6 +108,39 @@ export default function LoansScreen({ navigation }) {
     setRefreshing(false);
   };
 
+  const addNotification = async (loan) => {
+    try {
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1; 
+  
+      const notificationDate = new Date(currentYear, currentMonth, chosenDate);
+      
+      const notificationsCollection = collection(db, 'users', user?.uid, 'notifications');
+      await addDoc(notificationsCollection, {
+        name: loan.name,
+        description: `תשלום חודשי ${loan.name}`,
+        date: notificationDate, 
+        amount: loan.monthlyPay,
+        isYearly: true,
+        reminderDate: '1month',
+      });
+      console.log('Notification added');
+    } catch (error) {
+      console.error('Error adding notification:', error);
+    }
+  };
+  
+  const handleBellPress = (loan) => {
+    setChosenDate('');
+    setIsDateModalVisible(true);
+    setLoanToAddNotification(loan);
+  };
+
+  const handleDateSelection = () => {
+    addNotification(loanToAddNotification,chosenDate);
+    setIsDateModalVisible(false);
+  };
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <View style={styles.container}>
@@ -218,6 +255,10 @@ export default function LoansScreen({ navigation }) {
                   <Text style={styles.entryAmount}>ספק: {item.provider}</Text>
                   <Text style={styles.entryAmount}>תשלום חודשי: {item.monthlyPay}</Text>
                 </View>
+
+                <TouchableOpacity style={styles.bellButton} onPress={() => handleBellPress(item)}>
+                    <FontAwesome name="bell" size={24} color="blue" />
+                </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => deleteLoan(item.id)}
                   style={styles.deleteButton}
@@ -228,6 +269,41 @@ export default function LoansScreen({ navigation }) {
             );
           }}
         />
+
+
+            <Modal visible={isDateModalVisible} animationType="slide" transparent={true}>
+            <View style={styles.dateModalContainer}>
+                <View style={styles.dateModalContent}>
+                <Text style={styles.dateModalTitle}>בחר יום תשלום (1-31)</Text>
+                <View style={styles.dayButtonsContainer}>
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                    <TouchableOpacity
+                        key={day}
+                        style={[
+                        styles.dayButton,
+                        chosenDate === day.toString() && styles.selectedDayButton,
+                        ]}
+                        onPress={() => setChosenDate(day.toString())}
+                    >
+                        <Text style={styles.dayButtonText}>{day}</Text>
+                    </TouchableOpacity>
+                    ))}
+                </View>
+                <View style={styles.dateModalButtons}>
+                    <Button
+                    title="אישור"
+                    onPress={handleDateSelection}
+                    buttonStyle={styles.dateModalButton}
+                    />
+                    <Button
+                    title="ביטול"
+                    onPress={() => setIsDateModalVisible(false)}
+                    buttonStyle={styles.dateModalCancelButton}
+                    />
+                </View>
+                </View>
+            </View>
+            </Modal>
       </View>
     </ImageBackground>
   );
@@ -262,7 +338,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#888',  
+     
   },
   entryAmount: {
     marginBottom: 10,
@@ -335,6 +411,7 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
     width: '100%',
+    overflow: 'hidden',
   },
   pickerItem: {
     height: 50,
@@ -347,5 +424,44 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10,
+  },
+  dateModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  dateModalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '90%',
+    maxHeight: '50%',
+  },
+  dateModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  dayButtonsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  dayButton: {
+    backgroundColor: '#1e90ff',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 5,
+    margin: 5,
+  },
+  selectedDayButton: {
+    backgroundColor: 'lightblue', // Example of a selected day button style
+  },
+  dayButtonText: {
+    color: 'white',
+    fontSize: 16,
   },
 });
