@@ -11,7 +11,7 @@ import ChatScreen from '../screens/ChatScreen';
 import OperationsScreen from '../screens/OperationsScreen';
 import CreditCardsScreen from '../screens/CreditCardsScreen';
 import UploadCsvScreen from '../screens/UploadCsvScreen';
-
+import NotificationsScreen from '../screens/NotificationsScreen';
 const Tab = createBottomTabNavigator();
 
 export default function UserStack() {
@@ -35,6 +35,9 @@ export default function UserStack() {
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="credit-card" color={color} size={size} />),  headerShown: false}} />
         <Tab.Screen name="יבא מאקסל" component={UploadCsvScreen} options={{  tabBarButton: () => null,   tabBarVisible:false,headerShown: false }}/>
+        <Tab.Screen name="תזכורות" component={NotificationsScreen} options={{
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="alarm-light" color={color} size={size} />),  headerShown: false}} />
       </Tab.Navigator>
     </NavigationContainer>
   );
