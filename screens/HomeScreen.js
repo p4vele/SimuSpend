@@ -736,7 +736,7 @@ export default function HomeScreen({navigation }) {
       color: '#333333',
     },
     notificationDescription: {
-      fontSize: 16,
+      fontSize: 10,
       textAlign: 'right',
       color: '#666666',
     },
