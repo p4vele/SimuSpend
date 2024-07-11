@@ -13,7 +13,7 @@ import CreditCardsScreen from '../screens/CreditCardsScreen';
 import UploadCsvScreen from '../screens/UploadCsvScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import LoansScreen from '../screens/LoansScreen';
-
+import SharedBudgetScreen from '../screens/SharedBudgetScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -44,6 +44,9 @@ export default function UserStack() {
         <Tab.Screen name="הלוואות" component={LoansScreen} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="bank" color={color} size={size} />),  headerShown: false}} />
+        <Tab.Screen name="תקציב משותף" component={SharedBudgetScreen} options={{
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="account-multiple" color={color} size={size} />),  headerShown: false}} />
       </Tab.Navigator>
     </NavigationContainer>
   );
