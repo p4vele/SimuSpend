@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Button, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Button, Alert, Modal, ImageBackground, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { getFirestore,collection, query, where,getDocs,doc,updateDoc,arrayUnion,arrayRemove,addDoc,getDoc} from 'firebase/firestore';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
+import { Picker } from '@react-native-picker/picker';
+import { PieChart } from 'react-native-chart-kit';
+import { FontAwesome } from '@expo/vector-icons';
+const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
 
 const db = getFirestore(); 
 
@@ -203,143 +207,182 @@ const SharedBudgetScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Shared Budget Groups</Text>
-
-      <Text style={styles.subtitle}>Your Groups:</Text>
-      <FlatList
-        data={groups}
-        keyExtractor={(item) => item.id}
-        renderItem={renderGroupItem}
-        contentContainerStyle={styles.listContainer}
-      />
-
-      {/* Modal for inviting users */}
-      <Modal
-        animationType="slide"
-        visible={showInviteModal}
-        onRequestClose={() => setShowInviteModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Invite User to Group</Text>
-          <Text style={styles.modalText}>Select a group:</Text>
+    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <Text style={styles.title}>ניהול תקציב משותף</Text>
+          <Text style={styles.subtitle}>הקבוצות שלך:</Text>
+          <Text style={styles.subtitle2}>לחץ על הקבוצות לאפשרויות נוספות</Text>
           <FlatList
             data={groups}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.groupItem, selectedGroup && selectedGroup.id === item.id && { backgroundColor: '#eee' }]}
-                onPress={() => setSelectedGroup(item)}
-              >
-                <Text style={styles.groupName}>{item.name}</Text>
-                <Text style={styles.groupMembers}>{item.members.length} members</Text>
-              </TouchableOpacity>
-            )}
+            renderItem={renderGroupItem}
             contentContainerStyle={styles.listContainer}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Enter user's email"
-            value={inviteEmail}
-            onChangeText={text => setInviteEmail(text)}
+          <Modal
+            animationType="slide"
+            visible={showInviteModal}
+            onRequestClose={() => setShowInviteModal(false)}
+            transparent={true}
+            keyboardShouldPersistTaps='handled'
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>לחץ פעמיים על הקבוצה לפתיחת תפריט התקציב</Text>
+                  <Text style={styles.modalTitle}>או</Text>
+                  <Text style={styles.modalTitle}> בחר את הקבוצה והזן אימייל אותו תרצה להזמין</Text>
+                  <FlatList
+                    data={groups}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={[styles.groupItem, selectedGroup && selectedGroup.id === item.id && { backgroundColor: '#eee' }]}
+                        onPress={() => setSelectedGroup(item)}
+                      >
+                        <Text style={styles.groupName}>{item.name}</Text>
+                        <Text style={styles.groupMembers}>{item.members.length} members</Text>
+                      </TouchableOpacity>
+                    )}
+                    contentContainerStyle={styles.listContainer}
+                  />
+                  <TextInput
+                    style={styles.input2}
+                    placeholder="הכנס אימייל אותו תרצה להזמין"
+                    value={inviteEmail}
+                    onChangeText={text => setInviteEmail(text)}
+                  />
+                  <Button title="שלח הזמנה" onPress={sendInvitation} />
+                  <Button title="סגירה" onPress={() => setShowInviteModal(false)} />
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+          <View style={styles.newGroupContainer}>
+            <Text style={styles.subtitle}></Text>
+            <TextInput
+              style={styles.input}
+              placeholder="הזן שם ליצירת קבוצה חדשה"
+              value={newGroupName}
+              onChangeText={text => setNewGroupName(text)}
+            />
+            <Button title="צור קבוצה חדשה" onPress={createGroup} />
+          </View>
+          <Text style={styles.subtitle}>הזמנות ממתינות:</Text>
+          <FlatList
+            data={invitations}
+            keyExtractor={(item) => item.id}
+            renderItem={renderInvitationItem}
+            contentContainerStyle={styles.listContainer}
           />
-          <Button title="Send Invitation" onPress={sendInvitation} />
-          <Button title="Cancel" onPress={() => setShowInviteModal(false)} />
-        </View>
-      </Modal>
-
-      {/* Button to create new group */}
-      <View style={styles.createGroupContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter new group name"
-          value={newGroupName}
-          onChangeText={text => setNewGroupName(text)}
-        />
-        <Button title="Create Group" onPress={createGroup} />
+        </ScrollView>
       </View>
-
-      {/* Invitations section */}
-      <Text style={styles.subtitle}>Invitations:</Text>
-      <FlatList
-        data={invitations}
-        keyExtractor={(item) => item.id}
-        renderItem={renderInvitationItem}
-        contentContainerStyle={styles.listContainer}
-      />
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
+    justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#fff',
+    marginTop: 20,
+  },
+  scrollContainer: {
+    paddingVertical: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
     marginBottom: 20,
   },
   subtitle: {
-    fontSize: 18,
+    textAlign: 'center',
+    fontSize: 20,
     fontWeight: 'bold',
-    marginTop: 20,
+    color: '#fff',
+    marginBottom: 10,
+  },
+  subtitle2: {
+    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#fff',
     marginBottom: 10,
   },
   listContainer: {
-    flexGrow: 1,
+    paddingBottom: 20,
   },
   groupItem: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  invitationItem: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 15,
+    marginVertical: 5,
+    borderRadius: 10,
   },
   groupName: {
     fontSize: 18,
     fontWeight: 'bold',
   },
   groupMembers: {
+    fontSize: 14,
     color: '#666',
+  },
+  newGroupContainer: {
+    marginVertical: 20,
+  },
+  input: {
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 10,
+    marginVertical: 10,
+    direction: 'rtl',
+  },
+  input2: {
+    backgroundColor: 'grey',
+    padding: 10,
+    borderRadius: 10,
+    marginVertical: 10,
+    direction: 'rtl',
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
     padding: 20,
+    borderRadius: 10,
   },
   modalTitle: {
+    textAlign: 'center',
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
   },
   modalText: {
+    textAlign: 'center',
     fontSize: 16,
     marginBottom: 10,
   },
-  input: {
-    width: '80%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 20,
-  },
-  createGroupContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
+  invitationItem: {
+    backgroundColor: '#fff',
+    padding: 15,
+    marginVertical: 5,
+    borderRadius: 10,
   },
   invitationButtons: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
   },
 });
 
