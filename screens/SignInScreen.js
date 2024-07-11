@@ -52,7 +52,7 @@ const SignInScreen = ({ navigation }) => {
       <Button title="התחבר" buttonStyle={styles.button} onPress={login} />
       <Text style={styles.signUpText}>
         עדיין לא נרשמת?
-        <TouchableOpacity onPress={() => navigation.navigate('Sign Up')} >
+        <TouchableOpacity onPress={() => navigation.navigate('הרשמה')} >
           <Text style={styles.signUpLink}>הירשם עכשיו</Text>
         </TouchableOpacity>
       </Text>

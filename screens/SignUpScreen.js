@@ -78,7 +78,7 @@ const SignUpScreen = ({ navigation }) => {
         <View>
           <Text style={styles.signInText}>
             משתמש קיים?
-            <TouchableOpacity onPress={() => navigation.navigate('Sign In')} style={{ color: 'blue', marginLeft: 10 }}>
+            <TouchableOpacity onPress={() => navigation.navigate('התחברות')} style={{ color: 'blue', marginLeft: 10 }}>
               <Text style={styles.signInLink}>התחבר כאן </Text>
             </TouchableOpacity>
           </Text>
