@@ -1,33 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Button, Alert, Modal, ImageBackground, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { getFirestore,collection, query, where,getDocs,doc,updateDoc,arrayUnion,arrayRemove,addDoc,getDoc} from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc, arrayUnion, arrayRemove, addDoc, getDoc } from 'firebase/firestore';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Picker } from '@react-native-picker/picker';
 import { PieChart } from 'react-native-chart-kit';
 import { FontAwesome } from '@expo/vector-icons';
-const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; 
 
-const db = getFirestore(); 
+const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
+const db = getFirestore();
 
 const SharedBudgetScreen = () => {
-  const { user } = useAuthentication(); 
+  const { user } = useAuthentication();
 
   const [groups, setGroups] = useState([]);
   const [newGroupName, setNewGroupName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
+  const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState(null); 
+  const [showInvitationsModal, setShowInvitationsModal] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [invitations, setInvitations] = useState([]);
 
   useEffect(() => {
     fetchGroups();
     fetchInvitations();
-  }, [user]); 
+  }, [user]);
 
   const fetchGroups = async () => {
-    if (!user || !user.email) return; 
+    if (!user || !user.email) return;
     try {
-      const userEmail = user.email; 
+      const userEmail = user.email;
       const groupsRef = collection(db, 'groups');
       const q = query(groupsRef, where('members', 'array-contains', userEmail));
       const querySnapshot = await getDocs(q);
@@ -37,49 +40,45 @@ const SharedBudgetScreen = () => {
       console.error('Error fetching groups:', error);
     }
   };
-  
+
   const fetchInvitations = async () => {
-    console.log('fetchInvitations started');
     try {
-      const userEmail = user.email; 
+      const userEmail = user.email;
       const groupsRef = collection(db, 'groups');
       const querySnapshot = await getDocs(groupsRef);
-        
+
       const invitationsData = [];
-     
+
       querySnapshot.forEach((doc) => {
         const groupData = doc.data();
-        console.log('groupData', groupData);
-  
-        if (groupData.invitations) { 
-          const pendingInvitations = groupData.invitations.filter(invitation => 
+
+        if (groupData.invitations) {
+          const pendingInvitations = groupData.invitations.filter(invitation =>
             invitation.status === 'pending' && invitation.email === userEmail
           );
-  
+
           pendingInvitations.forEach(invitation => {
             invitationsData.push({ ...invitation, id: `${doc.id}_${invitation.email}` });
           });
         }
       });
-  
+
       setInvitations(invitationsData);
-      console.log('invitationsData:', invitationsData);
     } catch (error) {
       console.error('Error fetching invitations:', error);
     }
   };
-  
-  
+
   const createGroup = async () => {
     try {
-      const userEmail = user.email; 
+      const userEmail = user.email;
       const newGroupRef = await addDoc(collection(db, 'groups'), {
         name: newGroupName,
-        members: [userEmail], 
+        members: [userEmail],
       });
-      console.log('New group created with ID:', newGroupRef.id);
       setNewGroupName('');
-      fetchGroups(); 
+      fetchGroups();
+      setShowNewGroupModal(false);
       Alert.alert('Success', 'Group created successfully');
     } catch (error) {
       console.error('Error creating group:', error);
@@ -87,7 +86,6 @@ const SharedBudgetScreen = () => {
     }
   };
 
- 
   const sendInvitation = async () => {
     try {
       if (!selectedGroup) {
@@ -126,23 +124,23 @@ const SharedBudgetScreen = () => {
       const [groupId, email] = invitationId.split('_');
       const groupRef = doc(db, 'groups', groupId);
       const invitation = invitations.find(inv => inv.id === invitationId);
-  
+
       if (!invitation) {
         console.error('Invitation not found.');
         return;
       }
-  
+
       const groupSnapshot = await getDoc(groupRef);
       const groupData = groupSnapshot.data();
-      const updatedInvitations = groupData.invitations.map(inv => 
+      const updatedInvitations = groupData.invitations.map(inv =>
         inv.email === email ? { ...inv, status: 'accepted' } : inv
       );
-  
+
       await updateDoc(groupRef, {
         invitations: updatedInvitations,
         members: arrayUnion(user.email),
       });
-  
+
       setInvitations(invitations.filter(inv => inv.id !== invitationId));
       fetchGroups();
       Alert.alert('Success', 'Invitation accepted successfully');
@@ -151,46 +149,48 @@ const SharedBudgetScreen = () => {
       Alert.alert('Error', 'Failed to accept invitation');
     }
   };
-  
 
-  
   const rejectInvitation = async (invitationId) => {
     try {
       const [groupId, email] = invitationId.split('_');
       const groupRef = doc(db, 'groups', groupId);
       const invitation = invitations.find(inv => inv.id === invitationId);
-  
+
       if (!invitation) {
         console.error('Invitation not found.');
         return;
       }
-  
+
       const groupSnapshot = await getDoc(groupRef);
       const groupData = groupSnapshot.data();
-  
+
       const updatedInvitations = groupData.invitations.filter(inv => inv.email !== email);
-  
+
       await updateDoc(groupRef, {
         invitations: updatedInvitations,
       });
-  
+
       setInvitations(invitations.filter(invitation => invitation.id !== invitationId));
-  
+
       Alert.alert('Success', 'Invitation rejected successfully');
     } catch (error) {
       console.error('Error rejecting invitation:', error);
       Alert.alert('Error', 'Failed to reject invitation');
     }
   };
-  
-  
+
   const renderGroupItem = ({ item }) => (
     <TouchableOpacity style={styles.groupItem} onPress={() => handleGroupPress(item)}>
       <Text style={styles.groupName}>{item.name}</Text>
       <Text style={styles.groupMembers}>{item.members.length} members</Text>
     </TouchableOpacity>
   );
-
+  const renderGroups = ({ item }) => (
+    <TouchableOpacity style={styles.groupItem} onPress={() =>{}}>
+      <Text style={styles.groupName}>{item.name}</Text>
+      <Text style={styles.groupMembers}>{item.members.length} members</Text>
+    </TouchableOpacity>
+  );
   const renderInvitationItem = ({ item }) => (
     <View style={styles.invitationItem}>
       <Text>{`Invited to ${item.groupName} by ${item.sender}`}</Text>
@@ -209,16 +209,42 @@ const SharedBudgetScreen = () => {
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
+        
           <Text style={styles.title}>ניהול תקציב משותף</Text>
           <Text style={styles.subtitle}>הקבוצות שלך:</Text>
-          <Text style={styles.subtitle2}>לחץ על הקבוצות לאפשרויות נוספות</Text>
           <FlatList
             data={groups}
             keyExtractor={(item) => item.id}
-            renderItem={renderGroupItem}
+            renderItem={renderGroups}
             contentContainerStyle={styles.listContainer}
           />
+
+          {/* Modal for creating a new group */}
+          <Modal
+            animationType="slide"
+            visible={showNewGroupModal}
+            onRequestClose={() => setShowNewGroupModal(false)}
+            transparent={true}
+            keyboardShouldPersistTaps='handled'
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>צור קבוצה חדשה:</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="הזן שם ליצירת קבוצה חדשה"
+                    value={newGroupName}
+                    onChangeText={text => setNewGroupName(text)}
+                  />
+                  <Button title="צור קבוצה" onPress={createGroup} />
+                  <Button title="סגור" onPress={() => setShowNewGroupModal(false)} />
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+
+          {/* Modal for inviting a user to a group */}
           <Modal
             animationType="slide"
             visible={showInviteModal}
@@ -229,9 +255,7 @@ const SharedBudgetScreen = () => {
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>לחץ פעמיים על הקבוצה לפתיחת תפריט התקציב</Text>
-                  <Text style={styles.modalTitle}>או</Text>
-                  <Text style={styles.modalTitle}> בחר את הקבוצה והזן אימייל אותו תרצה להזמין</Text>
+                  <Text style={styles.modalTitle}>הזן אימייל של משתמש אותו תרצה להזמין</Text>
                   <FlatList
                     data={groups}
                     keyExtractor={(item) => item.id}
@@ -247,35 +271,59 @@ const SharedBudgetScreen = () => {
                     contentContainerStyle={styles.listContainer}
                   />
                   <TextInput
-                    style={styles.input2}
+                    style={styles.input}
                     placeholder="הכנס אימייל אותו תרצה להזמין"
                     value={inviteEmail}
                     onChangeText={text => setInviteEmail(text)}
                   />
                   <Button title="שלח הזמנה" onPress={sendInvitation} />
-                  <Button title="סגירה" onPress={() => setShowInviteModal(false)} />
+                  <Button title="סגור" onPress={() => setShowInviteModal(false)} />
                 </View>
               </View>
             </TouchableWithoutFeedback>
           </Modal>
-          <View style={styles.newGroupContainer}>
-            <Text style={styles.subtitle}></Text>
-            <TextInput
-              style={styles.input}
-              placeholder="הזן שם ליצירת קבוצה חדשה"
-              value={newGroupName}
-              onChangeText={text => setNewGroupName(text)}
-            />
-            <Button title="צור קבוצה חדשה" onPress={createGroup} />
+
+          {/* Modal for viewing invitations */}
+          <Modal
+            animationType="slide"
+            visible={showInvitationsModal}
+            onRequestClose={() => setShowInvitationsModal(false)}
+            transparent={true}
+            keyboardShouldPersistTaps='handled'
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>הזמנות ממתינות:</Text>
+                  <FlatList
+                    data={invitations}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderInvitationItem}
+                    contentContainerStyle={styles.listContainer}
+                  />
+                  <Button title="סגור" onPress={() => setShowInvitationsModal(false)} />
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+          <View style={styles.additionalView}>
+            <Text style={styles.subtitle2}>אפשרויות נוספות:</Text>
+
+            <TouchableOpacity style={styles.newGroupContainer} onPress={() => setShowInviteModal(true)}>
+              <FontAwesome name="user-plus" size={20} color="white" />
+              <Text style={styles.buttonText}>הזמן משתמש לקבוצה</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.newGroupContainer} onPress={() => setShowNewGroupModal(true)}>
+              <MaterialCommunityIcons name="account-group" size={20} color="white" />
+              <Text style={styles.buttonText}>צור קבוצה חדשה</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.newGroupContainer} onPress={() => setShowInvitationsModal(true)}>
+              <MaterialCommunityIcons name="timeline-check-outline" size={20} color="white" />
+              <Text style={styles.buttonText}>הזמנות ממתינות לאישור</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.subtitle}>הזמנות ממתינות:</Text>
-          <FlatList
-            data={invitations}
-            keyExtractor={(item) => item.id}
-            renderItem={renderInvitationItem}
-            contentContainerStyle={styles.listContainer}
-          />
-        </ScrollView>
+        
       </View>
     </ImageBackground>
   );
@@ -291,8 +339,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 20,
-    marginTop: 20,
+    marginTop: 30,
+    
   },
+ 
   scrollContainer: {
     paddingVertical: 20,
   },
@@ -310,9 +360,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 10,
   },
+  buttonText: {
+    textAlign: 'center',
+    fontSize: 15,
+    color: '#fff',
+    marginBottom: 10,
+  },
   subtitle2: {
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 25,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 10,
@@ -335,22 +391,19 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   newGroupContainer: {
-    marginVertical: 20,
+    marginVertical: 10,
+    alignItems: 'center',
+    borderRadius: 10,
+   
   },
   input: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 10,
-    direction: 'rtl',
-  },
-  input2: {
     backgroundColor: 'grey',
     padding: 10,
     borderRadius: 10,
     marginVertical: 10,
     direction: 'rtl',
   },
+  
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -369,11 +422,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  modalText: {
-    textAlign: 'center',
-    fontSize: 16,
-    marginBottom: 10,
-  },
   invitationItem: {
     backgroundColor: '#fff',
     padding: 15,
@@ -385,6 +433,5 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 });
-
 
 export default SharedBudgetScreen;

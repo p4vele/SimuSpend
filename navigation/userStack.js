@@ -20,7 +20,7 @@ const Tab = createBottomTabNavigator();
 export default function UserStack() {
   return (
     <NavigationContainer>
-      <Tab.Navigator>
+      <Tab.Navigator tabBarOptions={{labelStyle: { fontSize: 8.5, },}}>
         <Tab.Screen name="בית" component={HomeScreen} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="home" color={color} size={size} />), headerShown: false }}  />
