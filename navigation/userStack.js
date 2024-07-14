@@ -14,13 +14,14 @@ import UploadCsvScreen from '../screens/UploadCsvScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import LoansScreen from '../screens/LoansScreen';
 import SharedBudgetScreen from '../screens/SharedBudgetScreen';
+import GroupDetailsScreen from '../screens/GroupDetailsScreen';
 
 const Tab = createBottomTabNavigator();
 
 export default function UserStack() {
   return (
     <NavigationContainer>
-      <Tab.Navigator tabBarOptions={{labelStyle: { fontSize: 8.5, },}}>
+      <Tab.Navigator >
         <Tab.Screen name="בית" component={HomeScreen} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="home" color={color} size={size} />), headerShown: false }}  />
@@ -47,6 +48,8 @@ export default function UserStack() {
         <Tab.Screen name="תקציב משותף" component={SharedBudgetScreen} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="account-multiple" color={color} size={size} />),  headerShown: false}} />
+        <Tab.Screen name="GroupDetails" component={GroupDetailsScreen} options={{ tabBarButton: () => null,   tabBarVisible:false,headerShown: false}} />
+
       </Tab.Navigator>
     </NavigationContainer>
   );

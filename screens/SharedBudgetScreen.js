@@ -6,12 +6,14 @@ import { Picker } from '@react-native-picker/picker';
 import { PieChart } from 'react-native-chart-kit';
 import { FontAwesome } from '@expo/vector-icons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; 
+import { useNavigation } from '@react-navigation/native';
 
 const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
 const db = getFirestore();
 
 const SharedBudgetScreen = () => {
   const { user } = useAuthentication();
+  const navigation = useNavigation();
 
   const [groups, setGroups] = useState([]);
   const [newGroupName, setNewGroupName] = useState('');
@@ -186,7 +188,7 @@ const SharedBudgetScreen = () => {
     </TouchableOpacity>
   );
   const renderGroups = ({ item }) => (
-    <TouchableOpacity style={styles.groupItem} onPress={() =>{}}>
+    <TouchableOpacity style={styles.groupItem} onPress={() => navigation.navigate('GroupDetails', { groupId: item.id })}>
       <Text style={styles.groupName}>{item.name}</Text>
       <Text style={styles.groupMembers}>{item.members.length} members</Text>
     </TouchableOpacity>
