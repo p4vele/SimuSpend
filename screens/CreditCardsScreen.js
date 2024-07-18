@@ -166,7 +166,7 @@ export default function CreditCardsScreen({ navigation }) {
               <FlatList
                 data={creditCardExpenses}
                 keyExtractor={(item) => item.id}
-                numColumns={2}
+                numColumns={1}
                 renderItem={({ item }) => (
                   <View key={item.id} style={styles.expenseGridItem}>
                     <View style={styles.amountContainer}>
