@@ -57,7 +57,7 @@ const GroupDetailsScreen = () => {
       const uidsData = await Promise.all(uidsPromises);
       const validUidsData = uidsData.filter(data => data !== null);
 
-      const colors = ['white', 'green', 'orange', 'purple', 'red'];
+      const colors = ['blue', 'green', 'orange', 'purple', 'red'];
 
       const expensesPromises = validUidsData.map(async ({ email, uid }, index) => {
         const expensesRef = collection(db, 'users', uid, 'expenses');
@@ -130,7 +130,6 @@ const GroupDetailsScreen = () => {
   );
 
   return (
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
       <Text style={styles.title}>סמן שותפים להצגה</Text>
       <FlatList
@@ -141,7 +140,7 @@ const GroupDetailsScreen = () => {
             <Icon
               name={selectedMembers[item] ? 'checkbox' : 'square-outline'}
               size={24}
-              color={selectedMembers[item] ? 'white' : 'gray'}
+              color={selectedMembers[item] ? 'black' : 'gray'}
             />
             <Text style={styles.memberName}>{item}</Text>
           </TouchableOpacity>
@@ -172,7 +171,6 @@ const GroupDetailsScreen = () => {
         </View>
         </View>
       </View>
-    </ImageBackground>
   );
 };
 
@@ -192,7 +190,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
-    color:'white',
   },
   memberItem: {
     flexDirection: 'row',
@@ -203,7 +200,6 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 18,
     marginLeft: 10,
-    color:'white',
 
   },
   dataContainer: {
