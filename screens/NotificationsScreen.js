@@ -6,6 +6,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Button, Input, CheckBox } from 'react-native-elements';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const db = getFirestore();
 
@@ -76,8 +77,14 @@ export default function NotificationsScreen({ navigation }) {
   };
 
   return (
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
+    
       <View style={styles.container}>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={toggleModal}>
+          <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" /> 
+          <Text style={styles.buttonText}>הוסף תזכורת</Text>
+          </TouchableOpacity>
+        </View>
         <Modal visible={isModalVisible} animationType="slide" transparent={true} keyboardShouldPersistTaps='handled'>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.modalContainer}>
@@ -156,13 +163,8 @@ export default function NotificationsScreen({ navigation }) {
           }}
         />
       </View>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={toggleModal}>
-          <FontAwesome name="plus" size={20} color="white" />
-          <Text style={styles.buttonText}>הוסף תזכורת</Text>
-        </TouchableOpacity>
-      </View>
-    </ImageBackground>
+      
+    
   );
 }
 
@@ -193,9 +195,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   buttonText: {
-    marginLeft: 5,
-    color: 'white',
+    color: '#007BFF',
     fontSize: 16,
+    marginLeft: 5,
   },
   entryInfo: {
     flexDirection: 'column',

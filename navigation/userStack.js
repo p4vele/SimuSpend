@@ -35,7 +35,7 @@ export default function UserStack() {
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="chat" color={color} size={size} />), headerShown: false }} />
         <Tab.Screen name="כל התנועות" component={OperationsScreen} options={{ tabBarButton: () => null,   tabBarVisible:false,headerShown: false}} />
-        <Tab.Screen name="כרטיסי אשראי" component={CreditCardsScreen} options={{
+        <Tab.Screen name="כרטיסים" component={CreditCardsScreen} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="credit-card" color={color} size={size} />),  headerShown: false}} />
         <Tab.Screen name="יבא מאקסל" component={UploadCsvScreen} options={{  tabBarButton: () => null,   tabBarVisible:false,headerShown: false }}/>
@@ -45,7 +45,7 @@ export default function UserStack() {
         <Tab.Screen name="הלוואות" component={LoansScreen} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="bank" color={color} size={size} />),  headerShown: false}} />
-        <Tab.Screen name="תקציב משותף" component={SharedBudgetScreen} options={{
+        <Tab.Screen name="קבוצות " component={SharedBudgetScreen} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="account-multiple" color={color} size={size} />),  headerShown: false}} />
         <Tab.Screen name="GroupDetails" component={GroupDetailsScreen} options={{ tabBarButton: () => null,   tabBarVisible:false,headerShown: false}} />

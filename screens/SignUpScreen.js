@@ -36,7 +36,6 @@ const SignUpScreen = ({ navigation }) => {
   }
 
   return (
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <Image source={require('../assets/logo.png')} style={styles.logo} />
@@ -78,14 +77,13 @@ const SignUpScreen = ({ navigation }) => {
         <View>
           <Text style={styles.signInText}>
             משתמש קיים?
-            <TouchableOpacity onPress={() => navigation.navigate('התחברות')} style={{ color: 'blue', marginLeft: 10 }}>
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('התחברות')} style={{ color: 'gray', marginLeft: 10 }}>
               <Text style={styles.signInLink}>התחבר כאן </Text>
             </TouchableOpacity>
-          </Text>
         </View>
       </View>
       </TouchableWithoutFeedback>
-    </ImageBackground>
   );
 };
 
@@ -113,24 +111,22 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
-    backgroundColor:'blue',
   },
   error: {
     marginTop: 10,
     color: 'red',
   },
   signInText: {
-    marginTop: 5,
+    marginTop: 15,
     fontSize: 17,
     textAlign: 'center',
-    color: 'white',
     
   },
   signInLink: {
     marginTop: 5,
     fontSize: 17,
     textAlign: 'center',
-    color: 'white',
+    fontWeight:'bold',
   },
 });
 

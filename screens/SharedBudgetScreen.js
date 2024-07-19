@@ -209,7 +209,6 @@ const SharedBudgetScreen = () => {
   };
 
   return (
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <View style={styles.container}>
         
           <Text style={styles.title}>ניהול תקציב משותף</Text>
@@ -312,22 +311,21 @@ const SharedBudgetScreen = () => {
             <Text style={styles.subtitle2}>אפשרויות נוספות:</Text>
 
             <TouchableOpacity style={styles.newGroupContainer} onPress={() => setShowInviteModal(true)}>
-              <FontAwesome name="user-plus" size={20} color="white" />
+              <FontAwesome name="user-plus" size={20} />
               <Text style={styles.buttonText}>הזמן משתמש לקבוצה</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.newGroupContainer} onPress={() => setShowNewGroupModal(true)}>
-              <MaterialCommunityIcons name="account-group" size={20} color="white" />
+              <MaterialCommunityIcons name="account-group" size={20}  />
               <Text style={styles.buttonText}>צור קבוצה חדשה</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.newGroupContainer} onPress={() => setShowInvitationsModal(true)}>
-              <MaterialCommunityIcons name="timeline-check-outline" size={20} color="white" />
+              <MaterialCommunityIcons name="timeline-check-outline" size={20}  />
               <Text style={styles.buttonText}>הזמנות ממתינות לאישור</Text>
             </TouchableOpacity>
           </View>
         
       </View>
-    </ImageBackground>
   );
 };
 
@@ -351,7 +349,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -359,20 +356,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
     marginBottom: 10,
   },
   buttonText: {
     textAlign: 'center',
     fontSize: 15,
-    color: '#fff',
     marginBottom: 10,
   },
   subtitle2: {
     textAlign: 'center',
     fontSize: 25,
     fontWeight: 'bold',
-    color: '#fff',
     marginBottom: 10,
   },
   listContainer: {

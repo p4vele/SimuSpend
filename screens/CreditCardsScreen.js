@@ -5,6 +5,7 @@ import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc } from 'fireb
 import { Button, Input } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { FontAwesome } from '@expo/vector-icons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const db = getFirestore();
 
@@ -119,7 +120,6 @@ export default function CreditCardsScreen({ navigation }) {
   };
   
   return (
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <View style={styles.container}>
         
          <Modal visible={isModalVisible} animationType="slide" transparent={true}>
@@ -169,28 +169,13 @@ export default function CreditCardsScreen({ navigation }) {
                 numColumns={1}
                 renderItem={({ item }) => (
                   <View key={item.id} style={styles.expenseGridItem}>
-                    <View style={styles.amountContainer}>
-                        <Icon
-                          name='arrow-down'
-                          size={20}
-                          color='red'
-                          
-                        />
-                      </View>
-                      <View style={styles.entryInfo}>
+                    
+                      
+                        <Text style={styles.entryDescription}>{item.date}</Text>
                         <Text style={styles.entryDescription}>{item.description}</Text>
-                        <Text style={styles.entryAmount}>
-                          {item.amount}
-                        </Text>
+                        <Text style={styles.entryAmount}>{item.amount}</Text>
                         <Text style={styles.entryComment}>{item.comment}</Text>
-                      </View>
 
-                      <TouchableOpacity
-                      onPress={() => deleteExpense(item.id)}
-                      style={styles.deleteButton}
-                    >
-                      <Icon name="times" size={15} color="red" />
-                    </TouchableOpacity>
                   </View>
                 )}
                 contentContainerStyle={styles.expenseGridContainer}
@@ -227,11 +212,10 @@ export default function CreditCardsScreen({ navigation }) {
           )}
         />
         <TouchableOpacity style={styles.button} onPress={toggleModal}>
-              <FontAwesome name="plus" size={20} color="white" />
-              <Text style={styles.buttonText}>הוסף כרטיס אשראי</Text>
+        <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
+        <Text style={styles.buttonText}>הוסף כרטיס אשראי</Text>
         </TouchableOpacity>
       </View>
-    </ImageBackground>
   );
 }
 
@@ -245,7 +229,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.01)',
     padding: 20,
-    marginTop: 25,
+    marginTop: 35,
   },
   title: {
     fontSize: 20,
@@ -318,9 +302,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   buttonText: {
-      marginLeft: 5,
-      color: 'white',
-      fontSize: 16,
+    color: '#007BFF',
+    fontSize: 16,
+    marginLeft: 5,
   },
   cardBackground: {
     flex: 1,
@@ -328,7 +312,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 10,
     overflow: 'hidden',
-  },
+    },
   visaIcon: {
     position: 'absolute',
     top: 20,
@@ -362,12 +346,13 @@ const styles = StyleSheet.create({
   expenseGridContainer: {
     paddingHorizontal: 10,
     paddingVertical: 15,
+    
   },
   expenseGridItem: {
     direction: 'rtl',
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     margin: 5,
     padding: 10,
@@ -376,19 +361,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     backgroundColor:'#fff',
+    textAlign: 'center',
   },
   amountContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    textAlign: 'center',
   },
   entryComment:{
     direction: 'ltr',
-    textAlign: 'right',
+    textAlign: 'center',
     
   },
+  entryDescription: {
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  entryAmount: {
+    textAlign: 'center',
+    color:'red',
+  },
+ 
   deleteButton: {
     direction: 'ltr',
     padding: 5,
+    alignSelf:'flex-start',
   },
   modalContainer: {
     flex: 1,

@@ -43,7 +43,7 @@ const ChatScreen = () => {
         },
         {
           headers: {
-            Authorization: `Bearer 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`,
+            Authorization: `Bearer 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`,
             'Content-Type': 'application/json',
           },
         }
@@ -112,7 +112,6 @@ const ChatScreen = () => {
     }
   };
   return (
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={'padding'}
@@ -151,7 +150,6 @@ const ChatScreen = () => {
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
-    </ImageBackground>
     
   );
 };
@@ -237,9 +235,7 @@ const styles = StyleSheet.create({
   boldRole: {
     fontWeight: 'bold', 
   },
-  buttonTitle:{
-    color:'white',
-  },
+  
 });
 
 export default ChatScreen;

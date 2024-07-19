@@ -8,6 +8,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { RefreshControl } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const db = getFirestore();
 
@@ -142,12 +143,11 @@ export default function LoansScreen({ navigation }) {
     setIsDateModalVisible(false);
   };
   return (
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <View style={styles.container}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleModal}>
             <Text style={styles.buttonText}>  הוסף הלוואה    </Text> 
-            <FontAwesome name="plus" size={20} color="white" />
+            <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
           </TouchableOpacity>
         </View>
         <Modal visible={isModalVisible} animationType="slide" transparent={true} keyboardShouldPersistTaps='handled'>
@@ -305,7 +305,6 @@ export default function LoansScreen({ navigation }) {
             </View>
             </Modal>
       </View>
-    </ImageBackground>
   );
 }
 
@@ -326,7 +325,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 1)',
   },
   entryInfo: {
     flex: 1,
@@ -362,7 +361,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   buttonText: {
-    color: 'white',
+    color: '#007BFF',
     fontSize: 16,
     marginLeft: 5,
   },
