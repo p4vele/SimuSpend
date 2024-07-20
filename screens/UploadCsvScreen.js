@@ -166,7 +166,6 @@ export default function UploadCsvScreen() {
     };
 
     return (
-        <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
             <View style={styles.container}>
                 <Text style={styles.text}>בחר את סוג הויזה שלך והעלה קובץ</Text>
                 
@@ -194,7 +193,6 @@ export default function UploadCsvScreen() {
                     <Text style={styles.buttonText}>ויזה מקס</Text>
                 </TouchableOpacity>
             </View>
-        </ImageBackground>
     );
 }
 
@@ -215,11 +213,10 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         fontSize: 20,
         fontWeight: 'bold',
-        color:'white',
     },
     picker: {
         width: '80%',
-        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
         borderRadius: 10,
         marginBottom: 20,
     },
