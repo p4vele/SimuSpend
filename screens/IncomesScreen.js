@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity ,Modal,ImageBackground,TouchableWithoutFeedback,Keyboard} from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity ,Modal,ScrollView,TouchableWithoutFeedback,Keyboard} from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc,addDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -9,6 +9,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { PieChart } from 'react-native-chart-kit';
 import { RefreshControl } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { FontAwesome } from '@expo/vector-icons';
 
 const db = getFirestore();
@@ -37,7 +38,7 @@ export default function IncomesScreen({ navigation }) {
   const [incomes, setIncomes] = useState([]);
   const [newIncome, setNewIncome] = useState('');
   const [incomeAmount, setIncomeAmount] = useState('');
-  const [incomeDatetime, setIncomeDatetime] = useState(new Date().toISOString());
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedIncomeType, setSelectedIncomeType] = useState('משכורת');
   const [incomeComment, setIncomeComment] = useState('');
   const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
@@ -94,13 +95,13 @@ export default function IncomesScreen({ navigation }) {
       await addDoc(incomesCollection, {
         description: newIncome,
         amount: parseFloat(incomeAmount) || 0,
-        datetime: incomeDatetime,
+        date,
         type: selectedIncomeType,
         comment: incomeComment,
       });
       setNewIncome('');
       setIncomeAmount('');
-      setIncomeDatetime(new Date().toISOString());
+      setDate(new Date().toISOString().split('T')[0]);
       setSelectedIncomeType('salary');
       setIncomeComment('');
       fetchIncomes();
@@ -124,9 +125,14 @@ export default function IncomesScreen({ navigation }) {
     await fetchIncomes();
     setRefreshing(false);
   };
-  
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
   return (
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
     <View style={styles.container}>
     
       {incomeChartData.length > 0 && (
@@ -148,8 +154,8 @@ export default function IncomesScreen({ navigation }) {
       
       <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.button} onPress={toggleIncomeModal}>
-                <FontAwesome name="plus" size={20} color="white" />
-                <Text style={styles.buttonText}>הוסף הכנסה</Text>
+            <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
+            <Text style={styles.buttonText}>הוסף הכנסה</Text>
             </TouchableOpacity>
       </View>
       {/* Income Modal */}
@@ -173,11 +179,11 @@ export default function IncomesScreen({ navigation }) {
             />
             <View style={{marginRight:50, justifyContent: 'center', alignItems: 'center' }}>
             <DateTimePicker
-              style={styles.inputContainer}
-              value={new Date(incomeDatetime)}
-              mode="date"
-              display="default"
-              onChange={(event, date) => setIncomeDatetime(date.toISOString())}
+                    style={styles.inputContainer}
+                    value={new Date(date)}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => setDate(formatDate(selectedDate))}
             />
             </View>
             <Picker
@@ -202,36 +208,28 @@ export default function IncomesScreen({ navigation }) {
         </View>
         </TouchableWithoutFeedback>
       </Modal>
-      <FlatList
-        data={incomes}
-        keyExtractor={(item) => item.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.incomeGridItem}>
-            <View style={styles.amountContainer}>
-                <Icon
-                  name='arrow-up'
-                  size={20}
-                  color='green'
-                  
-                />
-            </View>
-            <View style={styles.entryInfo}>
-                <Text style={styles.incomeDescription}>{item.description}</Text>
-                <Text style={styles.incomeAmount}>{item.amount}</Text>
-                <Text style={styles.entryComment}>{item.comment}</Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => deleteIncome(item.id)}
-              style={styles.deleteButton}
-            >
-              <Icon name="times" size={15} color="red" />
-            </TouchableOpacity>
-          </TouchableOpacity>
-        )}
-      />
+      <ScrollView
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          contentContainerStyle={styles.expensesContainer}
+        >
+          <FlatList
+            data={incomes}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.expenseItem}>
+                <Text style={styles.expenseAmount}>{item.amount} ₪</Text>
+                <Text style={styles.expenseText}>{item.description}</Text>
+                <Text style={styles.expenseText}>{formatDate(item.date)}</Text>
+                <TouchableOpacity onPress={() => deleteIncome(item.id)} style={styles.deleteButton}>
+                  <FontAwesome name="times" size={20} color="red" />
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+        </ScrollView>
+
+            
     </View>
-    </ImageBackground>
   );
 }
 
@@ -252,33 +250,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  incomeItem: {
+  expensesContainer: {
+    paddingBottom: 20,
+  },
+  expenseItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
+    padding: 10,
     borderBottomWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 10,
+    borderBottomColor: '#ccc',
+    marginVertical:5,
+    alignContent: 'center',
   },
-  incomeDescription: {
-    marginRight:10,
-    direction: 'ltr',
-    textAlign: 'right',
-    fontWeight: 'bold',
+  expenseText: {
+    fontSize: 16,
+    marginLeft:5,
+    marginVertical:5,
   },
-  incomeAmount: {
-    marginRight:10,
-    direction: 'ltr',
-    textAlign: 'right',
-  },
-  entryComment: {
-    
-    direction: 'ltr',
-    textAlign: 'right',
+  expenseAmount: {
+    fontSize: 16,
+    color: 'green',
+    marginLeft:5,
+
   },
   deleteButton: {
-    padding: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContainer: {
     flex: 1,
@@ -325,8 +322,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
       marginLeft: 5,
-      color: 'white',
       fontSize: 16,
+      color:"#007BFF",
   },
   buttonContainer: {
     flexDirection: 'row',
