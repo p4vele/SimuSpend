@@ -20,36 +20,28 @@ export default function UploadCsvScreen() {
     const [selectedCreditCard, setSelectedCreditCard] = useState('');
 
     const fetchExpenses = async () => {
-        try {
+       
             const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
             const expensesSnapshot = await getDocs(expensesCollection);
             const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
             setExpenses(expensesData);
-        } catch (error) {
-            console.error('Error fetching expenses:', error);
-        }
+       
     };
 
     const fetchIncomes = async () => {
-        try {
             const incomesCollection = collection(db, 'users', user?.uid, 'incomes');
             const incomesSnapshot = await getDocs(incomesCollection);
             const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
             setIncomes(incomesData);
-        } catch (error) {
-            console.error('Error fetching incomes:', error);
-        }
+      
     };
 
     const fetchCreditCards = async () => {
-        try {
             const creditCardsCollection = collection(db, 'users', user?.uid, 'creditCards');
             const creditCardsSnapshot = await getDocs(creditCardsCollection);
             const creditCardsData = creditCardsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
             setCreditCards(creditCardsData);
-        } catch (error) {
-            console.error('Error fetching credit cards:', error);
-        }
+        
     };
 
     useEffect(() => {
@@ -75,7 +67,6 @@ export default function UploadCsvScreen() {
             const fileUri = result.uri || (result.assets && result.assets.length > 0 && result.assets[0].uri);
 
             if (!fileUri || !fileUri.startsWith('file://')) {
-                console.warn('Invalid or missing file URI:', fileUri);
                 return;
             }
 
@@ -86,7 +77,6 @@ export default function UploadCsvScreen() {
                 const parsedResult = Papa.parse(fileContent);
                 uploadFunction(parsedResult.data);
             } else {
-                console.warn('File does not exist:', fileInfo);
             }
         } catch (err) {
             console.error('Error picking document:', err);

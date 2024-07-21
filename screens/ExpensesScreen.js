@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Modal, ImageBackground, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Modal, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc } from 'firebase/firestore';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Button, Input } from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useFocusEffect } from '@react-navigation/native';
 import { RefreshControl } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { FontAwesome } from '@expo/vector-icons';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const db = getFirestore();
 
@@ -134,234 +134,210 @@ export default function ExpensesScreen({ navigation }) {
   };
 
   return (
-      <View style={styles.container}>
-        {chartData.length > 0 && (
-          <PieChart
-            data={chartData}
-            width={350}
-            height={220}
-            chartConfig={{
-              backgroundGradientFrom: '#fff',
-              backgroundGradientTo: '#fff',
-              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              strokeWidth: 2,
-            }}
-            accessor="amount"
-            backgroundColor="transparent"
-            style={styles.pai}
-          />
-        )}
+    <View style={styles.container}>
+      {chartData.length > 0 && (
+        <PieChart
+          data={chartData}
+          width={350}
+          height={220}
+          chartConfig={{
+            backgroundGradientFrom: '#fff',
+            backgroundGradientTo: '#fff',
+            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            strokeWidth: 2,
+          }}
+          accessor="amount"
+          backgroundColor="transparent"
+          style={styles.pai}
+        />
+      )}
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={toggleModal}>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={toggleModal}>
           <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
           <Text style={styles.buttonText}>הוסף הוצאה</Text>
-          </TouchableOpacity>
+        </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('יבא מאקסל')}>
-            <FontAwesome name="upload" size={20} color="#007BFF" />
-            <Text style={styles.buttonText}>יבא מאקסל</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('יבא מאקסל')}>
+          <FontAwesome name="upload" size={20} color="#007BFF" />
+          <Text style={styles.buttonText}>יבא מאקסל</Text>
+        </TouchableOpacity>
+      </View>
 
-        <Modal visible={isModalVisible} animationType="slide" transparent={true} keyboardShouldPersistTaps='handled'>
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>הוסף הוצאה</Text>
-                <View style={styles.inputContainer}>
-                  <Input
-                    placeholder="תיאור"
-                    value={newExpense}
-                    onChangeText={(text) => setNewExpense(text)}
-                    containerStyle={styles.input}
-                  />
-                  <Input
-                    placeholder="סכום"
-                    value={newAmount}
-                    onChangeText={(text) => setNewAmount(text)}
-                    keyboardType="numeric"
-                    containerStyle={styles.input}
-                  />
-                  <DateTimePicker
-                    style={styles.inputContainer}
-                    value={new Date(date)}
-                    mode="date"
-                    display="default"
-                    onChange={(event, selectedDate) => setDate(formatDate(selectedDate))}
-                  />
-                  <Input
-                    placeholder="מספר תשלומים"
-                    value={numPayments}
-                    onChangeText={(text) => setNumPayments(text)}
-                    keyboardType="numeric"
-                    containerStyle={styles.input}
-                  />
-                  <Input
-                    placeholder="הערה"
-                    value={comment}
-                    onChangeText={(text) => setComment(text)}
-                    containerStyle={styles.input}
-                  />
-                </View>
-                <Text style={styles.modalTitle2}>בחר סוג</Text>
-                  <Picker
-                    selectedValue={selectedExpenseType}
-                    onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="מזון ומשקאות" value="מזון ומשקאות" />
-                    <Picker.Item label="תחבורה" value="תחבורה" />
-                    <Picker.Item label="מסעדות" value="מסעדות" />
-                    <Picker.Item label="שירותי תקשורת" value="שירותי תקשורת" />
-                    <Picker.Item label="אנרגיה" value="אנרגיה" />
-                    <Picker.Item label="דלק" value="דלק" />
-                    <Picker.Item label="אחר" value="אחר" />
-                  </Picker>
-                  <Text style={styles.modalTitle2}>בחר אמצעי תשלום</Text>
-                  <Picker
-                    selectedValue={selectedCreditCard}
-                    onValueChange={(itemValue) => setSelectedCreditCard(itemValue)}
-                    style={styles.picker}
-                  >
-                   
-
-                    {creditCards.map((card) => (
-                      <Picker.Item key={card.id} label={card.nickname +"-"+ card.last4Digits} value={card.nickname} />
-                    ))}
-                    <Picker.Item label="מזומן" value="מזומן" />
-                  </Picker>
-                <Button title="שמור" onPress={addExpense} buttonStyle={styles.buttonSave} />
-                <Button title="סגור" onPress={toggleModal} buttonStyle={styles.buttonCancel} />
+      <Modal visible={isModalVisible} animationType="slide" transparent={true} keyboardShouldPersistTaps='handled'>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>הוסף הוצאה</Text>
+              <View style={styles.inputContainer}>
+                <Input
+                  placeholder="תיאור"
+                  value={newExpense}
+                  onChangeText={(text) => setNewExpense(text)}
+                  containerStyle={styles.input}
+                />
+                <Input
+                  placeholder="סכום"
+                  value={newAmount}
+                  onChangeText={(text) => setNewAmount(text)}
+                  keyboardType="numeric"
+                  containerStyle={styles.input}
+                />
+                <DateTimePicker
+                  style={styles.inputContainer}
+                  value={new Date(date)}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => setDate(formatDate(selectedDate))}
+                />
+                <Input
+                  placeholder="מספר תשלומים"
+                  value={numPayments}
+                  onChangeText={(text) => setNumPayments(text)}
+                  keyboardType="numeric"
+                  containerStyle={styles.input}
+                />
+                <Input
+                  placeholder="הערה"
+                  value={comment}
+                  onChangeText={(text) => setComment(text)}
+                  containerStyle={styles.input}
+                />
+              </View>
+              <Text style={styles.modalTitle2}>בחר סוג</Text>
+              <Picker
+                selectedValue={selectedExpenseType}
+                onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
+                style={styles.picker}
+              >
+                <Picker.Item label="מזון ומשקאות" value="מזון ומשקאות" />
+                <Picker.Item label="תחבורה" value="תחבורה" />
+                <Picker.Item label="מסעדות" value="מסעדות" />
+                <Picker.Item label="שירותי תקשורת" value="שירותי תקשורת" />
+                <Picker.Item label="אנרגיה" value="אנרגיה" />
+                <Picker.Item label="דלק" value="דלק" />
+                <Picker.Item label="אחר" value="אחר" />
+              </Picker>
+              <Text style={styles.modalTitle2}>בחר אמצעי תשלום</Text>
+              <Picker
+                selectedValue={selectedCreditCard}
+                onValueChange={(itemValue) => setSelectedCreditCard(itemValue)}
+                style={styles.picker}
+              >
+                {creditCards.map((card) => (
+                  <Picker.Item key={card.id} label={card.name} value={card.name} />
+                ))}
+                <Picker.Item label="מזומן" value="מזומן" />
+              </Picker>
+              <View style={styles.modalButtons}>
+                <Button title="ביטול" onPress={toggleModal} buttonStyle={styles.modalButtonCancel} />
+                <Button title="הוסף" onPress={addExpense} buttonStyle={styles.modalButtonAdd} />
               </View>
             </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
-        <ScrollView
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          contentContainerStyle={styles.expensesContainer}
-        >
-          <FlatList
-            data={expenses}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.expenseItem}>
-                <Text style={styles.expenseAmount}>{item.amount} ₪</Text>
-                <Text style={styles.expenseText}>{item.description}</Text>
-                <Text style={styles.expenseText}>{formatDate(item.date)}</Text>
-                <TouchableOpacity onPress={() => deleteExpense(item.id)} style={styles.deleteButton}>
-                  <FontAwesome name="times" size={20} color="red" />
-                </TouchableOpacity>
-              </View>
-            )}
-          />
-        </ScrollView>
-      </View>
+      <FlatList
+        data={expenses}
+        renderItem={({ item }) => (
+          <View style={styles.expenseItem}>
+            <Text style={{color:'red'}}>{item.amount}</Text>
+            <View style={styles.expensesData}>
+              <Text style={{fontWeight:'bold'}}>{item.description}</Text>
+              <Text>{item.comment}</Text> 
+            </View>
+            <Text>{formatDate(item.date)}</Text>
+            <TouchableOpacity onPress={() => deleteExpense(item.id)}>
+            <Icon name="times" size={15} color="red" />
+            </TouchableOpacity>
+          </View>
+        )}
+        keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
   container: {
     flex: 1,
     padding: 10,
     marginTop:35,
   },
-  pai: {
-    width: '80%',
-  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
+    marginBottom: 10,
   },
   button: {
     flexDirection: 'row',
-    padding: 10,
-    borderRadius: 5,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#007BFF',
-    fontSize: 16,
     marginLeft: 5,
+    color: '#007BFF',
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    
-  },
-  modalContent: {
-    width: '90%',
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    padding: 10,
-    height:'90%',
-   
-
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  expensesData:{
     textAlign: 'center',
-  },
-  modalTitle2: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  inputContainer: {
-    marginBottom: 10,
-    width: '90%',
-
-    
-  },
-  picker: {
-    height: '20%',
-    overflow: 'scroll',
-  },
-  
-  buttonSave: {
-    backgroundColor: '#28a745',
-    width: '50%',
-    alignSelf: 'center',
-  },
-  buttonCancel: {
-    marginTop: 5,
-    backgroundColor: '#dc3545',
-    width: '50%',
-    alignSelf: 'center',
-
-  },
-  expensesContainer: {
-    paddingBottom: 20,
   },
   expenseItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    marginVertical:5,
-    alignContent: 'center',
+    borderBottomColor: '#ddd',
   },
-  expenseText: {
-    fontSize: 16,
-    marginLeft:5,
-    marginVertical:5,
-  },
-  expenseAmount: {
-    fontSize: 16,
-    color: '#FF5733',
-    marginLeft:5,
-
-  },
-  deleteButton: {
+  modalContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalTitle2: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  inputContainer: {
+    width: '100%',
+    marginBottom: 10,
+  },
+  input: {
+    width: '100%',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalButtonCancel: {
+    backgroundColor: 'red',
+  },
+  modalButtonAdd: {
+    backgroundColor: 'green',
+  },
+  pai: {
+    alignSelf: 'center',
   },
 });

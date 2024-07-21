@@ -10,6 +10,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { PieChart } from 'react-native-chart-kit';
 import Swiper from 'react-native-swiper';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { FontAwesome } from '@expo/vector-icons';
 
 const auth = getAuth();
 const db = getFirestore();
@@ -40,7 +41,9 @@ export default function HomeScreen({ navigation }) {
   const [incomeChartData, setIncomeChartData] = useState([]);
 
   const [notifications, setNotifications] = useState([]);
+
   const [refresh, setRefresh] = useState(false);
+
   const today = new Date().toLocaleDateString('he-IL', {
     weekday: 'long',
     year: 'numeric',
@@ -66,38 +69,7 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  const filterNotifications = () => {
-    const currentDate = new Date();
-    return notifications.filter(notification => {
-      let eventDate;
-      if (notification.date && notification.date.seconds) {
-        eventDate = new Date(notification.date.seconds * 1000);
-      } else {
-        return false;
-      }
-
-      let reminderDate;
-      switch (notification.reminderDate) {
-        case '1month':
-          reminderDate = new Date(eventDate);
-          reminderDate.setMonth(eventDate.getMonth() - 1);
-          break;
-        case '1week':
-          reminderDate = new Date(eventDate);
-          reminderDate.setDate(eventDate.getDate() - 7);
-          break;
-        case '3days':
-          reminderDate = new Date(eventDate);
-          reminderDate.setDate(eventDate.getDate() - 3);
-          break;
-        default:
-          return false;
-      }
-
-      return currentDate >= reminderDate && currentDate <= eventDate;
-    });
-  };
-
+ 
   const fetchExpenses = async () => {
     try {
       const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
@@ -135,7 +107,6 @@ export default function HomeScreen({ navigation }) {
       console.error('Error fetching credit cards:', error);
     }
   };
-
   useEffect(() => {
     if (user) {
       fetchExpenses();
@@ -145,8 +116,42 @@ export default function HomeScreen({ navigation }) {
     }
   }, [user, refresh]);
 
-  const relevantNotifications = filterNotifications();
+  const [relevantNotifications, setRelevantNotifications] = useState([]);
+  useEffect(() => {
+    const filterNotifications = () => {
+        const currentDate = new Date();
+        return notifications.filter(notification => {
+          let eventDate;
+          if (notification.date && notification.date.seconds) {
+            eventDate = new Date(notification.date.seconds * 1000);
+          } else {
+            return false;
+          }
 
+          let reminderDate;
+          switch (notification.reminderDate) {
+            case '1month':
+              reminderDate = new Date(eventDate);
+              reminderDate.setMonth(eventDate.getMonth() - 1);
+              break;
+            case '1week':
+              reminderDate = new Date(eventDate);
+              reminderDate.setDate(eventDate.getDate() - 7);
+              break;
+            case '3days':
+              reminderDate = new Date(eventDate);
+              reminderDate.setDate(eventDate.getDate() - 3);
+              break;
+            default:
+              return false;
+          }
+
+          return currentDate >= reminderDate && currentDate <= eventDate;
+        });
+      };
+
+    setRelevantNotifications(filterNotifications());
+  }, [notifications]);
   
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -256,6 +261,13 @@ export default function HomeScreen({ navigation }) {
       console.error('Error deleting income:', error);
     }
   };
+
+ 
+  const deleteNotification = (id) => {
+    const updatedNotifications = relevantNotifications.filter(notification => notification.id !== id);
+    setRelevantNotifications(updatedNotifications);
+  };
+  
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
@@ -263,24 +275,30 @@ export default function HomeScreen({ navigation }) {
           <MaterialCommunityIcons name="logout" size={24} color="#333" />
           <Text style={styles.signOutText}>התנתק</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => setRefresh(prev => !prev)}>
+               <MaterialCommunityIcons name="refresh"  size='20' />
+        </TouchableOpacity>
         <Text style={styles.dateText}>{today}</Text>
       </View>
 
 
       <View style={styles.notificationsWrapper}>
-        <Text style={styles.title}>התראות</Text>
+        <Text style={styles.title}>התראות ותזכורות</Text>
         <ScrollView horizontal style={styles.notificationsContainer}>
         {relevantNotifications.map((notification) => (
           <View key={notification.id} style={styles.notificationItem}>
             <Text style={styles.notificationDate}>{new Date(notification.date.seconds * 1000).toLocaleDateString()}</Text>
             <Text style={styles.notificationTitle}>{notification.name}</Text>
             <Text style={styles.notificationDescription}>{notification.description}</Text>
+            <TouchableOpacity onPress={() => deleteNotification(notification.id)}>
+              <Icon name="times" size={14} color="red" />
+            </TouchableOpacity>
           </View>
         ))}
         </ScrollView>
       </View>
 
-      <Swiper style={styles.wrapper} showsButtons={false} loop={false} autoplay>
+      <Swiper style={styles.wrapper} showsButtons={false} loop={false} >
         <View style={styles.slide}>
           <Text style={styles.title}>הוצאות</Text>
           <PieChart
@@ -290,12 +308,19 @@ export default function HomeScreen({ navigation }) {
             chartConfig={chartConfig}
             accessor="amount"
             backgroundColor="transparent"
-            absolute
+            
           />
-          <TouchableOpacity onPress={toggleModal} style={styles.addButton}>
-            <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
-            <Text style={styles.addButtonText}>הוסף הוצאה</Text>
-          </TouchableOpacity>
+           <View style={styles.buttonContainer}>
+              <TouchableOpacity onPress={toggleModal} style={styles.addButton}>
+                <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
+                <Text style={styles.addButtonText}>הוסף הוצאה</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('יבא מאקסל')}>
+                <FontAwesome name="upload" size={20} color="#007BFF" />
+                <Text style={styles.addButtonText}>יבא מאקסל</Text>
+              </TouchableOpacity>
+          </View>
           <FlatList
             data={expenses}
             renderItem={({ item }) => (
@@ -325,7 +350,7 @@ export default function HomeScreen({ navigation }) {
             accessor="amount"
             backgroundColor="transparent"
             paddingLeft="10"
-            absolute
+            
           />
           <TouchableOpacity onPress={toggleIncomeModal} style={styles.addButton}>
             <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
@@ -555,6 +580,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#007BFF',
     marginLeft: 5,
+    marginRight: 10,
+    
   },
   expenseItem: {
     flexDirection: 'row',
@@ -642,6 +669,11 @@ const styles = StyleSheet.create({
   cancelButton: {
     marginTop: 5,
     backgroundColor: '#FFC107',
+  },
+  buttonContainer:{
+    flexDirection: 'row',
+    
+    marginBottom: 10,
   },
 });
 

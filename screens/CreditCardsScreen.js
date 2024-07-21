@@ -121,7 +121,12 @@ export default function CreditCardsScreen({ navigation }) {
   
   return (
       <View style={styles.container}>
-        
+        <View style={styles.textBox}>
+          <Text style={{fontWeight:'bold',fontSize:26,direction:'rtl'}}>במסך זה תוכל לראות חיובים   </Text>
+          <Text style={{fontWeight:'bold',fontSize:26,direction:'rtl'}}>לפי כרטיס אשראי</Text>
+          <Text></Text>
+          <Text>לחץ על כרטיס האשראי לתצוגה או הוסף כרטיס</Text>
+        </View>
          <Modal visible={isModalVisible} animationType="slide" transparent={true}>
           <View style={styles.modalContainer}>
             <View style={[styles.modalContent, { width: '80%' }]}>
@@ -229,7 +234,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.01)',
     padding: 20,
-    marginTop: 35,
+    marginTop: 50,
   },
   title: {
     fontSize: 20,
@@ -396,4 +401,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginTop: 5,
   },
+  textBox: {
+     
+    alignItems: 'center',
+    direction:'rtl',
+    marginBottom: 5,
+ },
 });

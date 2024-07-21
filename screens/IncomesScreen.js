@@ -208,25 +208,26 @@ export default function IncomesScreen({ navigation }) {
         </View>
         </TouchableWithoutFeedback>
       </Modal>
-      <ScrollView
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          contentContainerStyle={styles.expensesContainer}
-        >
+     
           <FlatList
             data={incomes}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <View style={styles.expenseItem}>
                 <Text style={styles.expenseAmount}>{item.amount} ₪</Text>
-                <Text style={styles.expenseText}>{item.description}</Text>
+                <View style={styles.expensesData}>
+                  <Text style={{fontWeight:'bold'}}>{item.description}</Text>
+                  <Text>{item.comment}</Text> 
+                </View>
                 <Text style={styles.expenseText}>{formatDate(item.date)}</Text>
                 <TouchableOpacity onPress={() => deleteIncome(item.id)} style={styles.deleteButton}>
                   <FontAwesome name="times" size={20} color="red" />
                 </TouchableOpacity>
               </View>
             )}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+
           />
-        </ScrollView>
 
             
     </View>

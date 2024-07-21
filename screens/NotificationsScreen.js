@@ -79,6 +79,12 @@ export default function NotificationsScreen({ navigation }) {
   return (
     
       <View style={styles.container}>
+        <View style={styles.textBox}>
+          <Text style={{fontWeight:'bold',fontSize:26,direction:'rtl'}}>במסך זה תוכל להוסיף תזכורות על</Text>
+          <Text style={{fontWeight:'bold',fontSize:26,direction:'rtl'}}>הוצאות קרובות לאירועים שונים</Text>
+          <Text></Text>
+          <Text>כמו: לימודים, נופש, טיפולים רפואיים,טסט וכדומה</Text>
+        </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleModal}>
           <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" /> 
@@ -106,6 +112,7 @@ export default function NotificationsScreen({ navigation }) {
                     mode="date"
                     display="default"
                     onChange={(event, date) => setNewNotification({ ...newNotification, date: date || new Date() })}
+                    style={styles.inputContainer2}
                   />
                   <Text style={styles.pickerLabel}>תאריך התראה מראש:</Text>
                   <Picker
@@ -257,10 +264,20 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 10,
   },
+  inputContainer2: {
+    marginBottom: 10,
+    alignSelf : 'center',
+    
+  },
   pickerLabel: {
     marginBottom: 5,
     textAlign: 'center',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  textBox: {
+     
+     alignItems: 'center',
+     direction:'rtl'
   },
 });

@@ -144,6 +144,12 @@ export default function LoansScreen({ navigation }) {
   };
   return (
       <View style={styles.container}>
+        <View style={styles.textBox}>
+          <Text style={{fontWeight:'bold',fontSize:26,direction:'rtl'}}>במסך זה תוכל להוסיף הלוואות  </Text>
+          <Text style={{fontWeight:'bold',fontSize:26,direction:'rtl'}}>קיימות </Text>
+          <Text></Text>
+          <Text>לחיצה על הפעמון תייצר תזכורת עבור תשלום ההלוואה</Text>
+        </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleModal}>
             <Text style={styles.buttonText}>  הוסף הלוואה    </Text> 
@@ -457,10 +463,15 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   selectedDayButton: {
-    backgroundColor: 'lightblue', // Example of a selected day button style
+    backgroundColor: 'lightblue', 
   },
   dayButtonText: {
     color: 'white',
     fontSize: 16,
   },
+  textBox: {
+     
+    alignItems: 'center',
+    direction:'rtl',
+ },
 });

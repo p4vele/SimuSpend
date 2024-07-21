@@ -43,7 +43,7 @@ const ChatScreen = () => {
         },
         {
           headers: {
-            Authorization: `Bearer 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`,
+            Authorization: `Bearer sk-None-GP6ME7BnqkMMAPG7HF5ZT3BlbkFJ30XDpsPEL4Jdk3DWRja3`,
             'Content-Type': 'application/json',
           },
         }
@@ -117,6 +117,11 @@ const ChatScreen = () => {
       behavior={'padding'}
       keyboardVerticalOffset={20 } 
     >
+       <View style={styles.textBox}>
+          <Text style={{fontWeight:'bold',fontSize:26,direction:'rtl'}}>ברוך הבא לצאט בוט!</Text>
+          <Text></Text>
+          <Text>רשום הודעה לבוט או בחר מן האפשרויות</Text>
+        </View>
       <ScrollView ref={scrollViewRef}
         style={styles.chatContainer}
         contentContainerStyle={styles.chatContentContainer}>
@@ -146,7 +151,7 @@ const ChatScreen = () => {
           onChangeText={(text) => setMessage(text)}
         />
         <TouchableOpacity onPress={sendMessage}>
-          <MaterialCommunityIcons name="send" size={20} color="#007bff" />
+          <MaterialCommunityIcons name="send" size={20} color="#007bff" marginBottom={10} />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -235,7 +240,12 @@ const styles = StyleSheet.create({
   boldRole: {
     fontWeight: 'bold', 
   },
-  
+  textBox: {
+     marginTop:25,
+    alignItems: 'center',
+    direction:'rtl',
+    marginBottom: 5,
+ },
 });
 
 export default ChatScreen;
