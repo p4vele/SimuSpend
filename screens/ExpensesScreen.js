@@ -110,15 +110,24 @@ const fetchExpenses = async () => {
   const addExpense = async () => {
     try {
       const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
-      await addDoc(expensesCollection, {
-        description: newExpense,
-        amount: parseFloat(newAmount) || 0,
-        date,
-        numPayments: parseInt(numPayments, 10) || 0,
-        type: selectedExpenseType,
-        comment,
-        creditCard: selectedCreditCard,
-      });
+      const numPaymentsInt = parseInt(numPayments, 10) || 0;
+      const amountPerPayment = parseFloat(newAmount) / numPaymentsInt || 0;
+      
+      for (let i = 0; i < numPaymentsInt; i++) {
+        const paymentDate = new Date(date);
+        paymentDate.setMonth(paymentDate.getMonth() + i);
+  
+        await addDoc(expensesCollection, {
+          description: newExpense,
+          amount: amountPerPayment,
+          date: paymentDate.toISOString().split('T')[0],
+          numPayments: numPaymentsInt,
+          type: selectedExpenseType,
+          comment: `${i + 1} / ${numPaymentsInt} תשלומים`,
+          creditCard: selectedCreditCard,
+        });
+      }
+  
       setNewExpense('');
       setNewAmount('');
       setDate(new Date().toISOString().split('T')[0]);
@@ -131,6 +140,7 @@ const fetchExpenses = async () => {
       console.error('Error adding expense:', error);
     }
   };
+  
 
   const deleteExpense = async (expenseId) => {
     try {
