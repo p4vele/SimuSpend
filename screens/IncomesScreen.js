@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity ,Modal,ScrollView,TouchableWithoutFeedback,Keyboard} from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity ,Modal,ScrollView,TouchableWithoutFeedback,Keyboard,Dimensions} from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc,addDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -33,6 +33,14 @@ const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1F
     return newChartData;
   };
 
+  const getMonthName = (monthIndex) => {
+    const monthNames = [
+      'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+      'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+    ];
+    return monthNames[monthIndex];
+  };
+
 export default function IncomesScreen({ navigation }) {
   const { user } = useAuthentication();
   const [incomes, setIncomes] = useState([]);
@@ -44,6 +52,15 @@ export default function IncomesScreen({ navigation }) {
   const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
   const [incomeChartData, setIncomeChartData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [totalIncomes, setTotalIncomes] = useState(0);
+
+  const filterIncomesByMonth = (incomes, month) => {
+    return incomes.filter(income => {
+        const incomeDate = new Date(income.date);
+        return incomeDate.getMonth() == month;
+    });
+};
 
   const toggleIncomeModal = () => {
     setIsIncomeModalVisible(!isIncomeModalVisible);
@@ -53,16 +70,18 @@ export default function IncomesScreen({ navigation }) {
   const fetchIncomes = async () => {
     try {
       if (!user) {
-        // If user is not defined, do nothing or handle accordingly
         return;
       }
       const incomesCollection = collection(db, 'users', user?.uid, 'incomes');
       const incomesSnapshot = await getDocs(incomesCollection);
       if(incomesCollection && incomesSnapshot.docs){
         const incomesData = incomesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setIncomes(incomesData);
-        console.log("fetch income - income screen");
-        await calculateIncomeChartData(incomesData);
+        const filteredIncomes = filterIncomesByMonth(incomesData, selectedMonth);
+        setIncomes(filteredIncomes);
+        const newData = await calculateIncomeChartData(filteredIncomes);
+        setIncomeChartData(newData);
+        calculateTotalIncomes(filteredIncomes);
+       
     }
     } catch (error) {
       console.error('Error fetching incomes:', error);
@@ -76,18 +95,12 @@ export default function IncomesScreen({ navigation }) {
     };
   
     fetchData();
-  }, [user]);
+  }, [user,selectedMonth]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      if (incomes.length > 0) {
-        const newData = await calculateIncomeChartData(incomes);
-        setIncomeChartData(newData);
-      }
-    };
-
-    loadData();
-  }, [incomes]);
+  const calculateTotalIncomes = (incomes) => {
+    const total = incomes.reduce((sum, income) => sum + income.amount, 0);
+    setTotalIncomes(total);
+  };
 
   const addIncome = async () => {
     try {
@@ -132,9 +145,58 @@ export default function IncomesScreen({ navigation }) {
     const year = d.getFullYear();
     return `${day}-${month}-${year}`;
   };
+
+  const [isVisible, setIsVisible] = useState(false);
+  
+  const toggleModalMonth = () => setIsVisible(!isVisible);
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      style={[styles.item, selectedMonth === item && styles.selectedItem]}
+      onPress={() => {
+        setSelectedMonth(item);
+        toggleModalMonth();
+      }}
+    >
+      <Text style={[styles.text, selectedMonth === item && styles.selectedText]}>
+        {getMonthName(item)}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
-    
+      <TouchableOpacity onPress={toggleModalMonth} style={styles.textBox}>
+          <Text style={{fontSize:26,marginBottom:5}}>הכנסות עבור חודש </Text>
+          <Text style={{fontWeight:'bold',fontSize:26,direction:'rtl'}}>{getMonthName(selectedMonth)}</Text>
+
+          <Text></Text>
+          <Text style={{fontSize:12}}>לחץ על על מנת לבחור חודש אחר</Text> 
+      </TouchableOpacity>
+      <Text style={{fontSize:26,marginTop:10,marginBottom:10,textAlign:'center'}}>סה"כ הכנסות לחודש {getMonthName(selectedMonth)}: {totalIncomes}₪</Text>
+      <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.button} onPress={toggleIncomeModal}>
+            <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
+            <Text style={styles.buttonText}>הוסף הכנסה</Text>
+            </TouchableOpacity>
+      </View>
+
+      <Modal
+        transparent
+        visible={isVisible}
+        animationType="slide"
+        onRequestClose={toggleModalMonth}
+      >
+        <View style={styles.modalBackground2}>
+          <View style={styles.modalContainer2}>
+            <FlatList
+              data={[...Array(12).keys()]}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.toString()}
+            />
+          </View>
+        </View>
+      </Modal>
       {incomeChartData.length > 0 && (
         <PieChart
           data={incomeChartData}
@@ -152,12 +214,7 @@ export default function IncomesScreen({ navigation }) {
         />
       )}
       
-      <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={toggleIncomeModal}>
-            <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
-            <Text style={styles.buttonText}>הוסף הכנסה</Text>
-            </TouchableOpacity>
-      </View>
+      
       {/* Income Modal */}
       <Modal visible={isIncomeModalVisible} animationType="slide" transparent={true}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -244,7 +301,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.01)',
     padding: 20,
-    marginTop:25,
+    marginTop:40,
   },
   title: {
     fontSize: 20,
@@ -314,16 +371,13 @@ const styles = StyleSheet.create({
     backgroundColor:'#fff',
   },
   button: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
-    direction:'rtl',
-    padding: 10,
-    borderRadius: 5,
-    marginHorizontal: 5,
+   
   },
   buttonText: {
       marginLeft: 5,
-      fontSize: 16,
+    
       color:"#007BFF",
   },
   buttonContainer: {
@@ -336,4 +390,41 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
   },
+
+  modalBackground2: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer2: {
+    width: Dimensions.get('window').width - 40,
+    maxHeight: 300,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    overflow: 'hidden',
+    
+  },
+  item: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    
+  },
+  selectedItem: {
+    backgroundColor: '#e6e6e6',
+    
+  },
+  text: {
+    fontSize: 16,
+    textAlign:'center',
+  },
+  selectedText: {
+    fontWeight: 'bold',
+  },
+  textBox: {
+     
+    alignItems: 'center',
+    direction:'rtl',
+ },
 });
