@@ -130,36 +130,37 @@ export default function CreditCardsScreen({ navigation }) {
          <Modal visible={isModalVisible} animationType="slide" transparent={true}>
           <View style={styles.modalContainer}>
             <View style={[styles.modalContent, { width: '80%' }]}>
-              <Text style={styles.modalTitle}>Add Credit Card</Text>
+              <Text style={styles.modalTitle}>הוסף כרטיס אשראי</Text>
               <Input
-                placeholder="Nickname"
+                placeholder="כינוי"
                 value={newNickname}
                 onChangeText={(text) => setNewNickname(text)}
                 containerStyle={styles.inputContainer}
               />
               <Input
-                placeholder="Last 4 Digits"
+                placeholder="4 ספרות אחרונות"
                 value={newLast4Digits}
                 onChangeText={(text) => setNewLast4Digits(text)}
                 keyboardType="numeric"
                 containerStyle={styles.inputContainer}
               />
               <Input
-                placeholder="Payment Date"
+                placeholder="תאריך תשלום 1-31"
                 value={newPaymentDate}
                 onChangeText={(text) => setNewPaymentDate(text)}
+                 keyboardType="numeric"
                 containerStyle={styles.inputContainer}
               />
               <Input
-                placeholder="Amount Limit"
+                placeholder="מסגרת"
                 value={newAmountLimit}
                 onChangeText={(text) => setNewAmountLimit(text)}
                 keyboardType="numeric"
                 containerStyle={styles.inputContainer}
               />
 
-              <Button title="Add Credit Card" onPress={addCreditCard} />
-              <Button title="Cancel" type="outline" onPress={toggleModal} />
+              <Button title="הוסף כרטיס אשראי" onPress={addCreditCard} />
+              <Button title="בטל" type="outline" onPress={toggleModal} />
             </View>
           </View>
         </Modal>

@@ -441,7 +441,7 @@ export default function HomeScreen({ navigation }) {
                 <Picker.Item label="מזומן" value="מזומן" />
               </Picker>
               <Button title="שמור" onPress={addExpense} buttonStyle={styles.saveButton} />
-              <Button title="בטל" onPress={toggleModal} buttonStyle={styles.cancelButton} />
+              <Button title="בטל"  type="outline" onPress={toggleModal} buttonStyle={styles.cancelButton} />
             </View>
           </View>
         </TouchableWithoutFeedback>
@@ -490,7 +490,7 @@ export default function HomeScreen({ navigation }) {
               </Picker>
               
               <Button title="שמור" onPress={addIncome} buttonStyle={styles.saveButton} />
-              <Button title="בטל" onPress={toggleIncomeModal} buttonStyle={styles.cancelButton} />
+              <Button title="בטל" type="outline" onPress={toggleIncomeModal} buttonStyle={styles.cancelButton} />
             </View>
           </View>
         </TouchableWithoutFeedback>
@@ -668,7 +668,6 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     marginTop: 5,
-    backgroundColor: '#FFC107',
   },
   buttonContainer:{
     flexDirection: 'row',
