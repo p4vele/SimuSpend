@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Modal, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Modal, TouchableWithoutFeedback, Keyboard ,ScrollView,Dimensions} from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc } from 'firebase/firestore';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -31,7 +31,13 @@ const calculateChartData = (expensesData) => {
 
   return newChartData;
 };
-
+const getMonthName = (monthIndex) => {
+  const monthNames = [
+    'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+    'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+  ];
+  return monthNames[monthIndex];
+};
 export default function ExpensesScreen({ navigation }) {
   const { user } = useAuthentication();
   const [expenses, setExpenses] = useState([]);
@@ -46,21 +52,33 @@ export default function ExpensesScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCreditCard, setSelectedCreditCard] = useState('מזומן');
   const [creditCards, setCreditCards] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [totalExpenses, setTotalExpenses] = useState(0);
 
-  const fetchExpenses = async () => {
+  const filterExpensesByMonth = (expenses, month) => {
+    return expenses.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate.getMonth() == month;
+    });
+};
+
+const fetchExpenses = async () => {
     try {
       if (!user) return;
 
       const expensesCollection = collection(db, 'users', user.uid, 'expenses');
       const expensesSnapshot = await getDocs(expensesCollection);
       const expensesData = expensesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setExpenses(expensesData);
-      const newData = await calculateChartData(expensesData);
+      const filteredExpenses = filterExpensesByMonth(expensesData, selectedMonth);
+      setExpenses(filteredExpenses);
+      const newData = await calculateChartData(filteredExpenses);
       setChartData(newData);
+      calculateTotalExpenses(filteredExpenses);
     } catch (error) {
       console.error('Error fetching expenses:', error);
     }
   };
+
 
   const fetchCreditCards = async () => {
     try {
@@ -78,7 +96,12 @@ export default function ExpensesScreen({ navigation }) {
   useEffect(() => {
     fetchExpenses();
     fetchCreditCards();
-  }, [user]);
+  }, [user,selectedMonth]);
+
+  const calculateTotalExpenses = (expenses) => {
+    const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    setTotalExpenses(total);
+  };
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -133,8 +156,63 @@ export default function ExpensesScreen({ navigation }) {
     return `${day}-${month}-${year}`;
   };
 
+  const [isVisible, setIsVisible] = useState(false);
+  
+  const toggleModalMonth = () => setIsVisible(!isVisible);
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      style={[styles.item, selectedMonth === item && styles.selectedItem]}
+      onPress={() => {
+        setSelectedMonth(item);
+        toggleModalMonth();
+      }}
+    >
+      <Text style={[styles.text, selectedMonth === item && styles.selectedText]}>
+        {getMonthName(item)}
+      </Text>
+    </TouchableOpacity>
+  );
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={toggleModalMonth} style={styles.textBox}>
+          <Text style={{fontSize:26,marginBottom:5}}>הוצאות עבור חודש </Text>
+          <Text style={{fontWeight:'bold',fontSize:26,direction:'rtl'}}>{getMonthName(selectedMonth)}</Text>
+
+          <Text></Text>
+          <Text style={{fontSize:12}}>לחץ על על מנת לבחור חודש אחר</Text> 
+      </TouchableOpacity>
+      <Text style={{fontSize:26,marginTop:10,marginBottom:10,textAlign:'center'}}>סה"כ הוצאות לחודש {getMonthName(selectedMonth)}: {totalExpenses}₪</Text>
+      
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={toggleModal}>
+          <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
+          <Text style={styles.buttonText}>הוסף הוצאה</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('יבא מאקסל')}>
+          <FontAwesome name="upload" size={20} color="#007BFF" />
+          <Text style={styles.buttonText}>יבא מאקסל</Text>
+        </TouchableOpacity>
+      </View>
+      
+      <Modal
+        transparent
+        visible={isVisible}
+        animationType="slide"
+        onRequestClose={toggleModalMonth}
+      >
+        <View style={styles.modalBackground2}>
+          <View style={styles.modalContainer2}>
+            <FlatList
+              data={[...Array(12).keys()]}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.toString()}
+            />
+          </View>
+        </View>
+      </Modal>
+      
       {chartData.length > 0 && (
         <PieChart
           data={chartData}
@@ -152,104 +230,89 @@ export default function ExpensesScreen({ navigation }) {
         />
       )}
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={toggleModal}>
-          <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
-          <Text style={styles.buttonText}>הוסף הוצאה</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('יבא מאקסל')}>
-          <FontAwesome name="upload" size={20} color="#007BFF" />
-          <Text style={styles.buttonText}>יבא מאקסל</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Modal visible={isModalVisible} animationType="slide" transparent={true} keyboardShouldPersistTaps='handled'>
+<Modal visible={isModalVisible} transparent={true} animationType="slide">
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>הוסף הוצאה</Text>
-              <View style={styles.inputContainer}>
-                <Input
-                  placeholder="תיאור"
-                  value={newExpense}
-                  onChangeText={(text) => setNewExpense(text)}
-                  containerStyle={styles.input}
+              <Input
+                placeholder="תיאור"
+                value={newExpense}
+                onChangeText={setNewExpense}
+                containerStyle={styles.inputContainer}
+              />
+              <Input
+                placeholder="סכום"
+                keyboardType="numeric"
+                value={newAmount}
+                onChangeText={setNewAmount}
+                containerStyle={styles.inputContainer}
+              />
+               <DateTimePicker
+                style={styles.inputContainer}
+                value={new Date(date)}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => setDate(formatDate(selectedDate))}
                 />
-                <Input
-                  placeholder="סכום"
-                  value={newAmount}
-                  onChangeText={(text) => setNewAmount(text)}
-                  keyboardType="numeric"
-                  containerStyle={styles.input}
-                />
-                <DateTimePicker
-                  style={styles.inputContainer}
-                  value={new Date(date)}
-                  mode="date"
-                  display="default"
-                  onChange={(event, selectedDate) => setDate(formatDate(selectedDate))}
-                />
-                <Input
-                  placeholder="מספר תשלומים"
-                  value={numPayments}
-                  onChangeText={(text) => setNumPayments(text)}
-                  keyboardType="numeric"
-                  containerStyle={styles.input}
-                />
-                <Input
-                  placeholder="הערה"
-                  value={comment}
-                  onChangeText={(text) => setComment(text)}
-                  containerStyle={styles.input}
-                />
-              </View>
-              <Text style={styles.modalTitle2}>בחר סוג</Text>
+              <Input
+                placeholder="מספר תשלומים"
+                keyboardType="numeric"
+                value={numPayments}
+                onChangeText={setNumPayments}
+                containerStyle={styles.inputContainer}
+              />
               <Picker
                 selectedValue={selectedExpenseType}
                 onValueChange={(itemValue) => setSelectedExpenseType(itemValue)}
                 style={styles.picker}
               >
-                <Picker.Item label="מזון ומשקאות" value="מזון ומשקאות" />
-                <Picker.Item label="תחבורה" value="תחבורה" />
-                <Picker.Item label="מסעדות" value="מסעדות" />
-                <Picker.Item label="שירותי תקשורת" value="שירותי תקשורת" />
-                <Picker.Item label="אנרגיה" value="אנרגיה" />
-                <Picker.Item label="דלק" value="דלק" />
-                <Picker.Item label="אחר" value="אחר" />
+                  <Picker.Item label="מזון ומשקאות" value="מזון ומשקאות" />
+                  <Picker.Item label="תחבורה" value="תחבורה" />
+                  <Picker.Item label="מסעדות" value="מסעדות" />
+                  <Picker.Item label="שירותי תקשורת" value="שירותי תקשורת" />
+                  <Picker.Item label="אנרגיה" value="אנרגיה" />
+                  <Picker.Item label="ביטוח" value="ביטוח" />
+                  <Picker.Item label="ריהוט ובית" value="ריהוט ובית" />
+                  <Picker.Item label="שונות" value="שונות" />
               </Picker>
-              <Text style={styles.modalTitle2}>בחר אמצעי תשלום</Text>
+              <Input
+                placeholder="הערות"
+                value={comment}
+                onChangeText={setComment}
+                containerStyle={styles.inputContainer}
+              />
               <Picker
                 selectedValue={selectedCreditCard}
                 onValueChange={(itemValue) => setSelectedCreditCard(itemValue)}
                 style={styles.picker}
               >
                 {creditCards.map((card) => (
-                  <Picker.Item key={card.id} label={card.name} value={card.name} />
+                  <Picker.Item key={card.id} label={card.nickname +"-"+ card.last4Digits} value={card.nickname} />
                 ))}
                 <Picker.Item label="מזומן" value="מזומן" />
               </Picker>
-              <View style={styles.modalButtons}>
-                <Button title="ביטול" onPress={toggleModal} buttonStyle={styles.modalButtonCancel} />
-                <Button title="הוסף" onPress={addExpense} buttonStyle={styles.modalButtonAdd} />
-              </View>
+              <Button title="שמור" onPress={addExpense} buttonStyle={styles.saveButton} />
+              <Button title="בטל" type="outline" onPress={toggleModal} buttonStyle={styles.cancelButton} />
             </View>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-
+      <View>
+      
+    </View>
       <FlatList
         data={expenses}
         renderItem={({ item }) => (
           <View style={styles.expenseItem}>
-            <Text style={{color:'red'}}>{item.amount}</Text>
+            <Text style={{ color: 'red' }}>{item.amount}</Text>
             <View style={styles.expensesData}>
-              <Text style={{fontWeight:'bold'}}>{item.description}</Text>
-              <Text>{item.comment}</Text> 
+              <Text style={{ fontWeight: 'bold' }}>{item.description}</Text>
+              <Text>{item.comment}</Text>
             </View>
             <Text>{formatDate(item.date)}</Text>
             <TouchableOpacity onPress={() => deleteExpense(item.id)}>
-            <Icon name="times" size={15} color="red" />
+              <Icon name="times" size={15} color="red" />
             </TouchableOpacity>
           </View>
         )}
@@ -264,12 +327,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    marginTop:35,
+    marginTop:50,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     marginBottom: 10,
+    marginTop: 10,
   },
   button: {
     flexDirection: 'row',
@@ -279,65 +343,101 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     color: '#007BFF',
   },
-  expensesData:{
-    textAlign: 'center',
-  },
   expenseItem: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: '#ccc',
   },
+  
+ 
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    padding: 20,
+    width: '90%',
+    backgroundColor: '#FFF',
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    padding: 20,
+    
   },
   modalTitle: {
-    fontSize: 18,
+    marginTop:20,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
+    textAlign: 'center',
   },
+  inputContainer: {
+    marginBottom: 10,
+    alignSelf: 'center',
+  },
+  picker: {
+    height: '20%',
+    overflow: 'scroll',
+  },
+  saveButton: {
+    marginTop: 10,
+    backgroundColor: '#007BFF',
+  },
+  cancelButton: {
+    marginTop: 5,
+  },
+  
   modalTitle2: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
   },
-  inputContainer: {
-    width: '100%',
-    marginBottom: 10,
-  },
+  
   input: {
     width: '100%',
   },
-  picker: {
-    height: 50,
-    width: '100%',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  modalButtonCancel: {
-    backgroundColor: 'red',
-  },
-  modalButtonAdd: {
-    backgroundColor: 'green',
-  },
+  
+  
   pai: {
     alignSelf: 'center',
   },
+
+  modalBackground2: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer2: {
+    width: Dimensions.get('window').width - 40,
+    maxHeight: 300,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    overflow: 'hidden',
+    
+  },
+  item: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    
+  },
+  selectedItem: {
+    backgroundColor: '#e6e6e6',
+    
+  },
+  text: {
+    fontSize: 16,
+    textAlign:'center',
+  },
+  selectedText: {
+    fontWeight: 'bold',
+  },
+  textBox: {
+     
+    alignItems: 'center',
+    direction:'rtl',
+ },
 });
