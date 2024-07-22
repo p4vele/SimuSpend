@@ -1,23 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Button,ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Button, Modal, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useRoute } from '@react-navigation/native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
+import { PieChart } from 'react-native-chart-kit';
+import Swiper from 'react-native-swiper';
 
 const db = getFirestore();
 
+const colorScale = ['#FF5733', '#33FF57', '#5733FF', '#FF33E6', '#33C2FF', '#A1FF33', '#FFB533', '#3366FF'];
+
 const GroupDetailsScreen = () => {
   const { user } = useAuthentication();
-
   const route = useRoute();
   const { groupId } = route.params;
   const [members, setMembers] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState({});
+  const [expensesData, setExpensesData] = useState([]);
+  const [incomesData, setIncomesData] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [isMonthModalVisible, setIsMonthModalVisible] = useState(false);
+  const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
     fetchGroupDetails();
   }, [groupId]);
+
+  useEffect(() => {
+    if (Object.keys(selectedMembers).length > 0) {
+      showSelectedData();
+    }
+  }, [selectedMembers, selectedMonth]);
 
   const fetchGroupDetails = async () => {
     try {
@@ -39,6 +53,15 @@ const GroupDetailsScreen = () => {
     }));
   };
 
+  const toggleMonthModal = () => setIsMonthModalVisible(!isMonthModalVisible);
+
+  const fetchMemberDataByMonth = async (email, uid, collectionType) => {
+    const collectionRef = collection(db, 'users', uid, collectionType);
+    const snapshot = await getDocs(collectionRef);
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return data.filter(item => new Date(item.date).getMonth() === selectedMonth);
+  };
+
   const showSelectedData = async () => {
     const selectedEmails = Object.keys(selectedMembers).filter(member => selectedMembers[member]);
 
@@ -57,20 +80,14 @@ const GroupDetailsScreen = () => {
       const uidsData = await Promise.all(uidsPromises);
       const validUidsData = uidsData.filter(data => data !== null);
 
-      const colors = ['blue', 'green', 'orange', 'purple', 'red'];
-
       const expensesPromises = validUidsData.map(async ({ email, uid }, index) => {
-        const expensesRef = collection(db, 'users', uid, 'expenses');
-        const expensesSnapshot = await getDocs(expensesRef);
-        const expenses = expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        return { email, expenses, color: colors[index % colors.length] };
+        const expenses = await fetchMemberDataByMonth(email, uid, 'expenses');
+        return { email, expenses };
       });
 
       const incomesPromises = validUidsData.map(async ({ email, uid }, index) => {
-        const incomesRef = collection(db, 'users', uid, 'incomes');
-        const incomesSnapshot = await getDocs(incomesRef);
-        const incomes = incomesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        return { email, incomes, color: colors[index % colors.length] };
+        const incomes = await fetchMemberDataByMonth(email, uid, 'incomes');
+        return { email, incomes };
       });
 
       const expensesData = await Promise.all(expensesPromises);
@@ -78,13 +95,48 @@ const GroupDetailsScreen = () => {
 
       setExpensesData(expensesData);
       setIncomesData(incomesData);
+
+      const newChartData = calculateChartData(expensesData.flatMap(data => data.expenses));
+      setChartData(newChartData);
+
+
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
 
-  const [expensesData, setExpensesData] = useState([]);
-  const [incomesData, setIncomesData] = useState([]);
+  const calculateChartData = (expensesData) => {
+    const typesData = expensesData.reduce((acc, expense) => {
+      acc[expense.type] = (acc[expense.type] || 0) + expense.amount;
+      return acc;
+    }, {});
+
+    const newChartData = Object.keys(typesData).map((type, index) => ({
+      name: type,
+      amount: typesData[type],
+      color: colorScale[index % colorScale.length],
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 15,
+    }));
+
+    return newChartData;
+  };
+
+ 
+
+  const renderMonthItem = ({ item }) => (
+    <TouchableOpacity
+      style={[styles.item, selectedMonth === item && styles.selectedItem]}
+      onPress={() => {
+        setSelectedMonth(item);
+        toggleMonthModal();
+      }}
+    >
+      <Text style={[styles.text, selectedMonth === item && styles.selectedText]}>
+        {getMonthName(item)}
+      </Text>
+    </TouchableOpacity>
+  );
 
   const renderExpenseItem = ({ item }) => {
     return (
@@ -146,9 +198,37 @@ const GroupDetailsScreen = () => {
           </TouchableOpacity>
         )}
       />
-      <Button title="הצג נתונים" onPress={showSelectedData} />
 
-      <View style={styles.dataContainer}>
+      <TouchableOpacity onPress={toggleMonthModal} style={styles.textBox}>
+        <Text style={{ fontSize: 26, marginBottom: 5 }}>הוצאות והכנסות עבור חודש </Text>
+        <Text style={{ fontWeight: 'bold', fontSize: 26, direction: 'rtl' }}>{getMonthName(selectedMonth)}</Text>
+        <Text style={{ fontSize: 12 }}>לחץ על כדי לבחור חודש אחר</Text>
+      </TouchableOpacity>
+
+        {expensesData.length > 0 && (
+            <View style={styles.swiperSlide}>
+              <Text style={styles.chartTitle}>הוצאות לפי סוג</Text>
+              <PieChart
+                data={chartData}
+                width={Dimensions.get('window').width}
+                height={220}
+                chartConfig={{
+                  backgroundColor: '#ffffff',
+                  backgroundGradientFrom: '#ffffff',
+                  backgroundGradientTo: '#ffffff',
+                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                  propsForLabels: {
+                    fontFamily: 'Cochin',
+                  },
+                }}
+                accessor="amount"
+                backgroundColor="transparent"
+                paddingLeft="15"
+              />
+            </View>
+          )}
+       <View style={styles.dataContainer}>
         
 
         {/* Display Incomes */}
@@ -170,20 +250,27 @@ const GroupDetailsScreen = () => {
           />
         </View>
         </View>
-      </View>
+      <Modal visible={isMonthModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <FlatList
+              data={[...Array(12).keys()]}
+              keyExtractor={(item) => item.toString()}
+              renderItem={renderMonthItem}
+            />
+            <Button title="סגור" onPress={toggleMonthModal} />
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
-  },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
     padding: 20,
-    marginTop:30,
+    marginTop:50,
   },
   title: {
     fontSize: 24,
@@ -194,13 +281,60 @@ const styles = StyleSheet.create({
   memberItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-   
+    marginVertical: 5,
   },
   memberName: {
     fontSize: 18,
     marginLeft: 10,
-
+  },
+  textBox: {
+    padding: 10,
+    backgroundColor: '#EDEDED',
+    marginVertical: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+ 
+  swiper: {
+    flex: 1,
+  },
+  swiperSlide: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paginationStyle: {
+    bottom: 10,
+  },
+  chartTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    width: '80%',
+    maxHeight: '80%',
+  },
+  item: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  selectedItem: {
+    backgroundColor: '#e0e0e0',
+  },
+  text: {
+    fontSize: 18,
+  },
+  selectedText: {
+    fontWeight: 'bold',
   },
   dataContainer: {
     flex: 20,
@@ -236,5 +370,13 @@ const styles = StyleSheet.create({
   },
 
 });
+
+const getMonthName = (monthIndex) => {
+  const monthNames = [
+    'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+    'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+  ];
+  return monthNames[monthIndex];
+};
 
 export default GroupDetailsScreen;
