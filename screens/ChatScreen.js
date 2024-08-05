@@ -5,8 +5,10 @@ import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc } from 'firebase/firestore';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; 
 import { FontAwesome } from '@expo/vector-icons';
+import  Constants from "expo-constants";
 
 const db = getFirestore();
+const apikey= Constants.expoConfig.extra.apiKey;
 
 const ChatScreen = () => {
   const [chatMessages, setChatMessages] = useState([]);
@@ -19,7 +21,7 @@ const ChatScreen = () => {
 
   useEffect(() => {
     setChatMessages([
-      { role: 'assistant', content: "שלום! אני פה כדי לעזור לך עם התקציב וההוצאות שלך. \nשאלו אותי כל שאלה הקשורה לפיננסים או בחרו מן האופציות להודעות מוכנות" }
+      { role: 'assistant', content: "שלום! אני פה כדי לעזור לך עם התקציב וההוצאות שלך. \nשאלו אותי כל שאלה הקשורה לפיננסים,כלכלה, מיסים או בחרו מן האופציות להודעות מוכנות" }
     ]);
     inputRef.current.focus();
   }, []);
@@ -43,7 +45,7 @@ const ChatScreen = () => {
         },
         {
           headers: {
-            Authorization: `Bearer sk-None-GP6ME7BnqkMMAPG7HF5ZT3BlbkFJ30XDpsPEL4Jdk3DWRja3`,
+            Authorization: `Bearer ${apikey}`,
             'Content-Type': 'application/json',
           },
         }
