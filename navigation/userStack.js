@@ -15,6 +15,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import LoansScreen from '../screens/LoansScreen';
 import SharedBudgetScreen from '../screens/SharedBudgetScreen';
 import GroupDetailsScreen from '../screens/GroupDetailsScreen';
+import SimulationsScreen from '../screens/SimulationsScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -49,7 +50,9 @@ export default function UserStack() {
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="account-multiple" color={color} size={size} />),  headerShown: false}} />
         <Tab.Screen name="GroupDetails" component={GroupDetailsScreen} options={{ tabBarButton: () => null,   tabBarVisible:false,headerShown: false}} />
-
+        <Tab.Screen name="סימולציות " component={SimulationsScreen} options={{
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="currency-ils" color={color} size={size} />),  headerShown: false}} />
       </Tab.Navigator>
     </NavigationContainer>
   );

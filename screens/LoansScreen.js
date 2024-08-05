@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, Modal, ImageBackground, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc } from 'firebase/firestore';
-import { Button, Input } from 'react-native-elements';
+import { Button, Input ,CheckBox} from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
@@ -26,7 +26,7 @@ export default function LoansScreen({ navigation }) {
   const [monthlyPay, setMonthlyPay] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
+  const [isFixedInterest, setIsFixedInterest] = useState(false);
   const [isDateModalVisible, setIsDateModalVisible] = useState(false);
   const [chosenDate, setChosenDate] = useState('');
   const [loanToAddNotification, setLoanToAddNotification] = useState(null);
@@ -76,6 +76,7 @@ export default function LoansScreen({ navigation }) {
         type: selectedLoanType,
         provider,
         monthlyPay: parseFloat(monthlyPay) || 0,
+        fixedInterest: isFixedInterest,
       });
       setNewLoan('');
       setTotalAmount('');
@@ -86,6 +87,7 @@ export default function LoansScreen({ navigation }) {
       setProvider('');
       setMonthlyPay('');
       setSelectedLoanType('משכנתא');
+      setIsFixedInterest(false);
       fetchLoans();
       toggleModal();
     } catch (error) {
@@ -179,6 +181,20 @@ export default function LoansScreen({ navigation }) {
                     onChangeText={(text) => setInterest(text)}
                     keyboardType="numeric"
                   />
+                  
+                  <CheckBox
+                      title="ריבית קבועה?"
+                      checked={isFixedInterest}
+                      onPress={() => setIsFixedInterest(!isFixedInterest)}
+                  />
+                    
+                    <Input
+                    placeholder="סכום חודשי"
+                    value={monthlyPay}
+                    onChangeText={(text) => setMonthlyPay(text)}
+                    keyboardType="numeric"
+                  />
+
                   <View style={styles.datePicker}>
                     <Text style={styles.text}>תאריך התחלה</Text>
                     <DateTimePicker
@@ -208,14 +224,7 @@ export default function LoansScreen({ navigation }) {
                     value={provider}
                     onChangeText={(text) => setProvider(text)}
                   />
-                  <Input
-                    placeholder="סכום חודשי"
-                    value={monthlyPay}
-                    onChangeText={(text) => setMonthlyPay(text)}
-                    keyboardType="numeric"
-                  />
-                </ScrollView>
-                <View style={styles.pickerContainer}>
+                  <View style={styles.pickerContainer}>
                   <Text style={styles.pickerLabel}>סוג הלוואה</Text>
                   <Picker
                     selectedValue={selectedLoanType}
@@ -229,6 +238,8 @@ export default function LoansScreen({ navigation }) {
                     <Picker.Item label="אחר" value="אחר" />
                   </Picker>
                 </View>
+                </ScrollView>
+                
                 <View style={styles.buttonContainer}>
                   <Button title="הוספה" onPress={addLoan} />
                   <Button title="ביטול" type="outline" onPress={toggleModal} />
@@ -402,9 +413,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   pickerContainer: {
-    marginBottom: 20,
-    borderRadius: 5,
-    overflow: 'hidden',
+    
+   
   },
   pickerLabel: {
     marginBottom: 10,
@@ -414,7 +424,7 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   picker: {
-    height: 50,
+    height: 'auto',
     width: '100%',
     overflow: 'hidden',
   },
