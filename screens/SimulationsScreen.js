@@ -180,19 +180,20 @@ export default function SimulationsScreen() {
         <Text> שינויים במעמ </Text>
         <Text> הוצאות גדולות</Text>
         <Text></Text>
-        <Text style={{fontWeight: 'bold', fontSize: 16, direction: 'rtl',marginTop:5,}}> לחץ על הסימולציה הרצויה</Text>
+        
       </View>
 
       
 
       <View style={styles.buttonContainer}>
+        <Text style={{fontWeight: 'bold', fontSize: 20, direction: 'rtl',marginBottom:10,}}> לחץ על הסימולציה הרצויה</Text>
         <TouchableOpacity onPress={toggleVATModal} style={styles.button}>
-          <Text style={{fontSize: 20, marginBottom: 5,marginRight:5,color:'#007BFF'}}>סימולציית שינוי במעמ</Text>
-          <MaterialCommunityIcons name="finance" size={24} color="#007BFF" />
+          <Text style={{fontSize: 30, marginBottom: 5,marginRight:5,color:'#007BFF'}}>סימולציית שינוי במעמ</Text>
+          <MaterialCommunityIcons name="finance" size={30} color="#007BFF" />
         </TouchableOpacity>
         <TouchableOpacity onPress={toggleInterestRateModal} style={styles.button}>
-          <Text style={{fontSize: 20, marginBottom: 5,marginRight:5,color:'#007BFF'}}>סימולציית שינוי ריבית </Text>
-          <MaterialCommunityIcons name="trending-up" size={24} color="#007BFF" />
+          <Text style={{fontSize: 30, marginBottom: 5,marginRight:5,color:'#007BFF'}}>סימולציית שינוי ריבית </Text>
+          <MaterialCommunityIcons name="trending-up" size={30} color="#007BFF" />
         </TouchableOpacity>
      </View>
       
@@ -289,7 +290,12 @@ export default function SimulationsScreen() {
     </View>
   </Modal>
 
-
+    <Text style={{fontWeight: 'bold', fontSize: 10, direction: 'rtl',textAlign:'center',marginTop:'auto'}}>
+      הסימולטור הפיננסי מספק הערכה כללית של תשלומים עתידיים בהתבסס על הנתונים המוזנים,
+       אך אין לראותו כהמלצה פיננסית מקצועית.
+       השימוש בסימולטור הוא באחריות המשתמש בלבד,
+        והוא אחראי על דיוק הנתונים ולקבל ייעוץ מקצועי במידת הצורך.
+    </Text>
       
     </View>
   );
@@ -406,10 +412,10 @@ const styles = StyleSheet.create({
   buttonContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 16,
+    marginVertical: 30,
   },
   button: {
-    flexDirection: 'row',
+    flexDirection: 'column-reverse',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 10,
