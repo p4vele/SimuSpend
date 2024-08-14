@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, Modal, ImageBackground, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc } from 'firebase/firestore';
-import { Button, Input ,CheckBox} from 'react-native-elements';
+import { Button, Input ,TextInput} from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
@@ -11,22 +11,29 @@ import { FontAwesome } from '@expo/vector-icons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const db = getFirestore();
-
+const prime = 6.0;
+const index= 1.0;
 export default function LoansScreen({ navigation }) {
   const { user } = useAuthentication();
   const [loans, setLoans] = useState([]);
   const [newLoan, setNewLoan] = useState('');
-  const [totalAmount, setTotalAmount] = useState('');
-  const [interest, setInterest] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
-  const [numMonths, setNumMonths] = useState('');
   const [selectedLoanType, setSelectedLoanType] = useState('משכנתא');
-  const [provider, setProvider] = useState('');
   const [monthlyPay, setMonthlyPay] = useState('');
+  
+  const [loanType, setLoanType] = useState('fixed');
+  const [interestRate, setInterestRate] = useState('');
+  const [primeRateAdjustment, setPrimeRateAdjustment] = useState('');
+  const [initialRate, setInitialRate] = useState('');
+  const [repaymentMethod, setRepaymentMethod] = useState('');
+  const [principalAmount, setPrincipalAmount] = useState('');
+  const [months, setMonths] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [isFixedInterest, setIsFixedInterest] = useState(false);
   const [isDateModalVisible, setIsDateModalVisible] = useState(false);
   const [chosenDate, setChosenDate] = useState('');
   const [loanToAddNotification, setLoanToAddNotification] = useState(null);
@@ -62,38 +69,163 @@ export default function LoansScreen({ navigation }) {
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };
+  const calculateRepayment = (principall,ratee,monthsCountt,loanType) => {
+    const principal = parseFloat(principall); // סכום הקרן
+    const monthsCount = parseInt(monthsCountt); // מספר החודשים
+    let rate;
+    if (loanType === 'fixed') {
+      rate = parseFloat(ratee) / 100 / 12;
+  } else if (loanType === 'prime') {
+      rate = (parseFloat(ratee) + prime) / 100 / 12;
+  } else if (loanType === 'index') {
+      rate = (parseFloat(ratee) + index) / 100 / 12;
+  }
+        
+    let monthlyRepayment = 0;
+  
+    if (repaymentMethod === 'spitzer') {
+      // חישוב לפי שיטת שפיצר
+      monthlyRepayment = principal * (rate * Math.pow(1 + rate, monthsCount)) / (Math.pow(1 + rate, monthsCount) - 1);
+    } else if (repaymentMethod === 'equal_principal') {
+      // חישוב לפי קרן שווה (תשלום חודשי ראשון)
+      monthlyRepayment = (principal / monthsCount) + (principal * rate);
+    } else if (repaymentMethod === 'grace') {
+      // חישוב לפי גרייס (תשלום חודשי בזמן תקופת הגרייס)
+      monthlyRepayment = principal * rate;
+      // לאחר תקופת הגרייס (הנחה שאין גרייס):
+      // monthlyRepayment = principal * (rate * Math.pow(1 + rate, monthsCount)) / (Math.pow(1 + rate, monthsCount) - 1);
+    } else if (repaymentMethod === 'balloon') {
+      // חישוב לפי בלון (תשלום חודשי על הריבית בלבד)
+      monthlyRepayment = principal * rate;
+      // בסוף התקופה: 
+      // let finalPayment = principal + principal * rate * monthsCount;
+    }
+  
+    return monthlyRepayment.toFixed(2);
+  };
 
+  const [amortizationSchedule, setAmortizationSchedule] = useState(null);
+
+  const generateAmortizationSchedule = (principal, ratee, monthsCount, repaymentMethod,monthlyPay) => {
+    const schedule = [];
+    console.log('rate defult',ratee);
+    let rate = ratee/12/100;
+    console.log('rate ',rate);
+    const principalAmount = parseFloat(principal);
+    console.log('principal: ' + principalAmount);
+    const months = parseInt(monthsCount);
+    console.log('months: ' + months);
+    let currentBalance = principalAmount;
+    console.log('currentBalance: ' + currentBalance);
+    let monthlyPayment = parseFloat(monthlyPay);
+    console.log('monthlyPayment: ' + monthlyPayment);
+    console.log('repaymentMethod: ', repaymentMethod);
+    if (repaymentMethod === 'spitzer') {
+     
+      for (let i = 0; i < months; i++) {
+        const interestPayment = currentBalance * rate;
+        const principalPayment = monthlyPayment - interestPayment;
+        currentBalance -= principalPayment;
+        schedule.push({
+          month: i + 1,
+          payment: monthlyPayment,
+          principalPayment: principalPayment.toFixed(2),
+          interestPayment: interestPayment.toFixed(2),
+          balance: currentBalance < 0 ? 0 : currentBalance.toFixed(2),
+        });
+      }
+    } else if (repaymentMethod === 'equal_principal') {
+      for (let i = 0; i < months; i++) {
+        const principalPayment = principalAmount / months;
+        const interestPayment = currentBalance * rate;
+        monthlyPayment = principalPayment + interestPayment;
+        currentBalance -= principalPayment;
+        schedule.push({
+          month: i + 1,
+          payment: monthlyPayment.toFixed(2),
+          principalPayment: principalPayment.toFixed(2),
+          interestPayment: interestPayment.toFixed(2),
+          balance: currentBalance < 0 ? 0 : currentBalance.toFixed(2),
+        });
+      }
+    } else if (repaymentMethod === 'grace') {
+      for (let i = 0; i < months; i++) {
+        const interestPayment = principalAmount * rate;
+        monthlyPayment = interestPayment;
+        if (i === months - 1) {
+          monthlyPayment += principalAmount;
+        }
+        schedule.push({
+          month: i + 1,
+          payment: monthlyPayment.toFixed(2),
+          principalPayment: i === months - 1 ? principalAmount.toFixed(2) : '0.00',
+          interestPayment: interestPayment.toFixed(2),
+          balance: i === months - 1 ? '0.00' : principalAmount.toFixed(2),
+        });
+      }
+    } else if (repaymentMethod === 'balloon') {
+      for (let i = 0; i < months; i++) {
+        const interestPayment = principalAmount * rate;
+        monthlyPayment = interestPayment;
+        if (i === months - 1) {
+          monthlyPayment += principalAmount;
+        }
+        schedule.push({
+          month: i + 1,
+          payment: monthlyPayment.toFixed(2),
+          principalPayment: i === months - 1 ? principalAmount.toFixed(2) : '0.00',
+          interestPayment: interestPayment.toFixed(2),
+          balance: i === months - 1 ? '0.00' : principalAmount.toFixed(2),
+        });
+      }
+    }
+    setAmortizationSchedule(schedule);
+    setModalVisible(true);
+    return schedule;
+  };
+  
   const addLoan = async () => {
     try {
       const loansCollection = collection(db, 'users', user?.uid, 'loans');
       await addDoc(loansCollection, {
         name: newLoan,
-        totalAmount: parseFloat(totalAmount) || 0,
-        interest: parseFloat(interest) || 0,
+        totalAmount: parseFloat(principalAmount) || 0,
+        interest: parseFloat(interestRate) || 0,
         startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        numMonths: parseInt(numMonths, 10) || 0,
+        numMonths: parseInt(months, 10) || 0,
         type: selectedLoanType,
-        provider,
-        monthlyPay: parseFloat(monthlyPay) || 0,
-        fixedInterest: isFixedInterest,
+        fixedInterest: loanType === 'fixed' ? true : false,
+        primeRateAdjustment: loanType === 'prime' ? parseFloat(primeRateAdjustment) || 0 : null,
+        initialRate: loanType === 'index' ? parseFloat(initialRate) || 0 : null,
+        repaymentMethod: repaymentMethod || 'spitzer', 
+        monthlyPay: loanType === 'fixed' 
+        ? calculateRepayment(principalAmount, interestRate, months,loanType) 
+        : loanType === 'prime' 
+        ? calculateRepayment(principalAmount, primeRateAdjustment, months,loanType) 
+        : loanType === 'index' 
+        ? calculateRepayment(principalAmount, initialRate, months,loanType) 
+        : 0, 
+        loanType : loanType,
+        //amortizationSchedule: generateAmortizationSchedule(principalAmount, loanType === 'fixed' ? interestRate / 100 / 12 : loanType === 'prime' ? (prime + parseFloat(primeRateAdjustment)) / 100 / 12 : (index + parseFloat(initialRate)) / 100 / 12, months, repaymentMethod),
       });
       setNewLoan('');
-      setTotalAmount('');
-      setInterest('');
+      setPrincipalAmount('');
       setStartDate(new Date());
-      setEndDate(new Date());
-      setNumMonths('');
-      setProvider('');
+      setMonths('');
       setMonthlyPay('');
       setSelectedLoanType('משכנתא');
-      setIsFixedInterest(false);
+      setLoanType('fixed');
+      setInterestRate('');
+      setPrimeRateAdjustment('');
+      setInitialRate('');
+      setRepaymentMethod('spitzer');
       fetchLoans();
       toggleModal();
     } catch (error) {
       console.error('Error adding loan:', error);
     }
-  }; 
+  };
+  
 
   const deleteLoan = async (loanId) => {
     try {
@@ -144,6 +276,11 @@ export default function LoansScreen({ navigation }) {
     addNotification(loanToAddNotification,chosenDate);
     setIsDateModalVisible(false);
   };
+
+  
+  
+  
+
   return (
       <View style={styles.container}>
         <View style={styles.textBox}>
@@ -158,97 +295,127 @@ export default function LoansScreen({ navigation }) {
             <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
           </TouchableOpacity>
         </View>
-        <Modal visible={isModalVisible} animationType="slide" transparent={true} keyboardShouldPersistTaps='handled'>
+
+        <Modal
+          visible={isModalVisible}
+          animationType="slide"
+          transparent={true}
+          keyboardShouldPersistTaps="handled"
+        >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.modalContainer}>
               <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>הוסף הלוואה</Text>
-                <ScrollView style={styles.inputContainer}>
+                <ScrollView style={styles.inputContainer} contentContainerStyle={{ paddingBottom: 20 }}>
                   <Input
                     placeholder="שם הלוואה"
                     value={newLoan}
                     onChangeText={(text) => setNewLoan(text)}
                   />
                   <Input
-                    placeholder="סכום כולל"
-                    value={totalAmount}
-                    onChangeText={(text) => setTotalAmount(text)}
+                    placeholder="סכום קרן"
+                    value={principalAmount}
+                    onChangeText={(text) => setPrincipalAmount(text)}
                     keyboardType="numeric"
                   />
-                  <Input
-                    placeholder="ריבית"
-                    value={interest}
-                    onChangeText={(text) => setInterest(text)}
-                    keyboardType="numeric"
-                  />
-                  
-                  <CheckBox
-                      title="ריבית קבועה?"
-                      checked={isFixedInterest}
-                      onPress={() => setIsFixedInterest(!isFixedInterest)}
-                  />
-                    
-                    <Input
-                    placeholder="סכום חודשי"
-                    value={monthlyPay}
-                    onChangeText={(text) => setMonthlyPay(text)}
-                    keyboardType="numeric"
-                  />
-
                   <View style={styles.datePicker}>
                     <Text style={styles.text}>תאריך התחלה</Text>
                     <DateTimePicker
                       value={startDate}
                       mode="date"
                       display="default"
-                      onChange={(event, date) => setStartDate(date)}
+                      onChange={(event, date) => setStartDate(date || new Date())}
                     />
                   </View>
-                  <View style={styles.datePicker}>
-                    <Text style={styles.text}>תאריך סיום צפוי</Text>
-                    <DateTimePicker
-                      value={endDate}
-                      mode="date"
-                      display="default"
-                      onChange={(event, date) => setEndDate(date)}
-                    />
-                  </View>
-                  <Input
-                    placeholder="מספר חודשים"
-                    value={numMonths}
-                    onChangeText={(text) => setNumMonths(text)}
-                    keyboardType="numeric"
-                  />
-                  <Input
-                    placeholder="שם הספק"
-                    value={provider}
-                    onChangeText={(text) => setProvider(text)}
-                  />
-                  <View style={styles.pickerContainer}>
-                  <Text style={styles.pickerLabel}>סוג הלוואה</Text>
-                  <Picker
-                    selectedValue={selectedLoanType}
-                    onValueChange={(itemValue) => setSelectedLoanType(itemValue)}
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="משכנתא" value="משכנתא" />
-                    <Picker.Item label="הלוואת רכב" value="הלוואת רכב" />
-                    <Picker.Item label="הלוואת סטודנטים" value="הלוואת סטודנטים" />
-                    <Picker.Item label="הלוואת אשראי" value="הלוואת אשראי" />
-                    <Picker.Item label="אחר" value="אחר" />
-                  </Picker>
-                </View>
-                </ScrollView>
                 
+                  <Input
+                    placeholder="הזן את מספר החודשים"
+                    keyboardType="numeric"
+                    value={months}
+                    onChangeText={setMonths}
+                    style={styles.input}
+                  />
+                  <Text style={styles.text}>סוג מסלול:</Text>
+                  <Picker
+                    selectedValue={loanType}
+                    onValueChange={(itemValue) => setLoanType(itemValue)}
+                  >
+                    <Picker.Item label="ריבית קבועה ללא הצמדה" value="fixed" />
+                    <Picker.Item label="ריבית צמודה למדד פריים" value="prime" />
+                    <Picker.Item label="ריבית צמודת מדד" value="index" />
+                  </Picker>
+                  {loanType === 'fixed' && (
+                    <View>
+                      <Input
+                        placeholder="הזן את אחוז הריבית"
+                        keyboardType="numeric"
+                        value={interestRate}
+                        onChangeText={setInterestRate}
+                        style={styles.input}
+                      />
+                    </View>
+                  )}
+                  {loanType === 'prime' && (
+                    <View>
+                      <Input
+                        placeholder=" הזן את הריבית הנוספת לפריים"
+                        keyboardType="numeric"
+                        value={primeRateAdjustment}
+                        onChangeText={setPrimeRateAdjustment}
+                        style={styles.input}
+                      />
+                    </View>
+                  )}
+                  {loanType === 'index' && (
+                    <View>
+                      <Input
+                        placeholder="הזן את הריבית התחלתית"
+                        keyboardType="numeric"
+                        value={initialRate}
+                        onChangeText={setInitialRate}
+                        style={styles.input}
+                      />
+                    </View>
+                  )}
+                  <Text style={styles.text}>סוג שיטה:</Text>
+                  <Picker
+                    selectedValue={repaymentMethod}
+                    onValueChange={(itemValue) => setRepaymentMethod(itemValue)}
+                  >
+                    <Picker.Item label="שפיצר" value="spitzer" />
+                    <Picker.Item label="קרן שווה" value="equal_principal" />
+                    <Picker.Item label="גרייס" value="grace" />
+                    <Picker.Item label="בלון" value="balloon" />
+                  </Picker>
+                  
+                  <View style={styles.pickerContainer}>
+                    <Text style={styles.pickerLabel}>סוג הלוואה</Text>
+                    <Picker
+                      selectedValue={selectedLoanType}
+                      onValueChange={(itemValue) => setSelectedLoanType(itemValue)}
+                      style={styles.picker}
+                    >
+                      <Picker.Item label="משכנתא" value="משכנתא" />
+                      <Picker.Item label="הלוואת רכב" value="הלוואת רכב" />
+                      <Picker.Item label="הלוואת סטודנטים" value="הלוואת סטודנטים" />
+                      <Picker.Item label="הלוואת אשראי" value="הלוואת אשראי" />
+                      <Picker.Item label="אחר" value="אחר" />
+                    </Picker>
+                  </View>
+                </ScrollView>
                 <View style={styles.buttonContainer}>
                   <Button title="הוספה" onPress={addLoan} />
                   <Button title="ביטול" type="outline" onPress={toggleModal} />
+        
                 </View>
               </View>
             </View>
           </TouchableWithoutFeedback>
         </Modal>
 
+
+        <Text style={styles.entryDescription}>{"ריבית פריים עדכנית : " + prime + "%"} </Text>
+        <Text style={styles.entryDescription}>{"מדד מעודכן : " + index }</Text>            
         <FlatList
           data={loans}
           keyExtractor={(item) => item.id}
@@ -264,18 +431,84 @@ export default function LoansScreen({ navigation }) {
                 <View style={styles.entryInfo}>
                   <Text style={styles.entryDescription}>{item.name}</Text>
                   <Text style={styles.entryAmount}>סכום כולל: {item.totalAmount}</Text>
-                  <Text style={styles.entryAmount}>ריבית: {item.interest}%</Text>
+                  <Text style={styles.entryAmount}>
+                    ריבית: {item.loanType === 'prime'
+                      ? item.primeRateAdjustment + "% + פריים"
+                      : item.loanType === 'index'
+                      ? item.initialRate +"%"
+                      : item.interest+"%"}
+                  </Text>
                   <Text style={styles.entryAmount}>תאריך התחלה: {formattedStartDate}</Text>
-                  <Text style={styles.entryAmount}>תאריך סיום: {formattedEndDate}</Text>
                   <Text style={styles.entryAmount}>מספר חודשים: {item.numMonths}</Text>
                   <Text style={styles.entryAmount}>סוג: {item.type}</Text>
-                  <Text style={styles.entryAmount}>ספק: {item.provider}</Text>
+                  <Text style={styles.entryAmount}>שיטת תשלום: {item.repaymentMethod}</Text>
+                  <Text style={styles.entryAmount}>מסלול : {item.loanType}</Text>
                   <Text style={styles.entryAmount}>תשלום חודשי: {item.monthlyPay}</Text>
+                  <TouchableOpacity style={styles.bellButton}
+                    onPress={() => {
+                      let interestRate;
+                      if (item.loanType === 'fixed') {
+                        interestRate = item.interest; 
+                      } else if (item.loanType === 'prime') {
+                        interestRate = item.primeRateAdjustment + prime; 
+                      } else if (item.loanType === 'index') {
+                        interestRate = item.initialRate + index;
+                      }
+                
+                    generateAmortizationSchedule(item.totalAmount, interestRate, item.numMonths, item.repaymentMethod, item.monthlyPay);
+                    }}
+                  >
+                    <Text style={styles.entryDescription}>לחץ כאן כדי לראות לוח סילוקין </Text>
+                  </TouchableOpacity>
                 </View>
+                <Modal
+                  animationType="slide"
+                  transparent={true}
+                  visible={modalVisible}
+                  onRequestClose={() => {
+                    setModalVisible(!modalVisible);
+                  }}
+                >
+                  <View style={styles.modalContainer2}>
+                    <View style={styles.modalContent2}>
+                      <ScrollView>
+                        <Text style={styles.modalTitle}>לוח סילוקין</Text>
+                        <View style={{ marginBottom: 10 }}>
+                         
+                          <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', marginBottom: 5 }}>
+                            <Text style={{ textAlign:'center',fontWeight: 'bold', flex: 1 }}>חודש</Text>
+                            <Text style={{ textAlign:'center',fontWeight: 'bold', flex: 1 }}>תשלום  קרן</Text>
+                            <Text style={{ textAlign:'center',fontWeight: 'bold', flex: 1 }}>תשלום ריבית</Text>
+                            <Text style={{ textAlign:'center',fontWeight: 'bold', flex: 1 }}>תשלום כולל</Text>
+                            <Text style={{ textAlign:'center',fontWeight: 'bold', flex: 1 }}>יתרה</Text>
+                          </View>
 
+                          {amortizationSchedule && amortizationSchedule.map((entry, index) => (
+                            <View key={index} style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', marginBottom: 5 }}>
+                              <Text style={{ textAlign:'center', flex: 1 }}>חודש {entry.month}</Text>
+                              <Text style={{ textAlign:'center', flex: 1 }}>{entry.principalPayment}</Text>
+                              <Text style={{ textAlign:'center', flex: 1 }}>{entry.interestPayment}</Text>
+                              <Text style={{ textAlign:'center', flex: 1 }}>{entry.payment}</Text>
+                              <Text style={{ textAlign:'center', flex: 1 }}>{entry.balance}</Text>
+                            </View>
+                          ))}
+                        </View>
+
+
+                      </ScrollView>
+                      <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={() => setModalVisible(false)}
+                      >
+                        <Text style={styles.closeButtonText}>סגור</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </Modal>
                 <TouchableOpacity style={styles.bellButton} onPress={() => handleBellPress(item)}>
                     <FontAwesome name="bell" size={24} color="blue" />
                 </TouchableOpacity>
+                
                 <TouchableOpacity
                   onPress={() => deleteLoan(item.id)}
                   style={styles.deleteButton}
@@ -286,7 +519,7 @@ export default function LoansScreen({ navigation }) {
             );
           }}
         />
-
+                
 
             <Modal visible={isDateModalVisible} animationType="slide" transparent={true}>
             <View style={styles.dateModalContainer}>
@@ -373,8 +606,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 10,
-    
     borderRadius: 5,
   },
   buttonText: {
@@ -484,4 +715,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     direction:'rtl',
  },
+
+
+ //silukin
+ modalContainer2: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+},
+modalContent2: {
+  backgroundColor: 'white',
+  borderRadius: 10,
+  padding: 20,
+  width: '90%',
+  maxHeight: '80%',
+},
+
+closeButtonText: {
+  color: 'blue',
+  fontSize: 16,
+  fontWeight: 'bold',
+}
 });
