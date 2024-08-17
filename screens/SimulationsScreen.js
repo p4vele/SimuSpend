@@ -4,6 +4,7 @@ import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { useFocusEffect } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import RNPickerSelect from 'react-native-picker-select';
 
 const db = getFirestore();
 
@@ -113,10 +114,8 @@ export default function SimulationsScreen() {
 
   const handleMonthSelect = (monthIndex) => {
     setSelectedMonth(monthIndex);
-    setModalMonthVisible(false);
   };
 
-  const toggleModalMonth = () => setModalMonthVisible(!modalMonthVisible);
   const toggleVATModal = () => setVATModalVisible(!VATmodalVisible);
   const toggleInterestRateModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -231,18 +230,37 @@ export default function SimulationsScreen() {
             <Text>סימולציית שינוי במעמ</Text>
             <TextInput
               style={styles.input}
-              placeholder="מעמ סימולציה (%)"
+              placeholder="הזן מעמ סימולציה (%)"
               keyboardType="numeric"
               value={simulatedCPI}
               onChangeText={setSimulatedCPI}
+              placeholderTextColor="black"
             />
-            <Button title="חשב" onPress={calculateFinancialIndicators} style={styles.saveButton} />
-            <Button title="סגור" type="outline" onPress={toggleVATModal} style={styles.cancelButton}/>
-            <TouchableOpacity onPress={toggleModalMonth} style={styles.textBox2}>
-              <Text style={{fontSize: 26}}>הוצאות עבור חודש </Text>
-              <Text style={{fontWeight: 'bold', fontSize: 26, direction: 'rtl'}}>{getMonthName(selectedMonth)}</Text>
-              <Text style={{fontSize: 12}}>לחץ על על מנת לבחור חודש אחר</Text>
-            </TouchableOpacity>
+            
+            <View style={styles.dropdownContainer}>
+            <Text style={{marginVertical:15 , marginLeft:15}}>בחר חודש:</Text>
+            <RNPickerSelect
+              onValueChange={(value) => handleMonthSelect(value)}
+              items={[
+                { label: 'ינואר', value: 0 },
+                { label: 'פברואר', value: 1 },
+                { label: 'מרץ', value: 2 },
+                { label: 'אפריל', value: 3 },
+                { label: 'מאי', value: 4 },
+                { label: 'יוני', value: 5 },
+                { label: 'יולי', value: 6 },
+                { label: 'אוגוסט', value: 7 },
+                { label: 'ספטמבר', value: 8 },
+                { label: 'אוקטובר', value: 9 },
+                { label: 'נובמבר', value: 10 },
+                { label: 'דצמבר', value: 11 }
+              ]}
+              value={selectedMonth}
+              style={pickerSelectStyles}
+            />
+          </View>
+          <Button title="חשב" onPress={calculateFinancialIndicators} style={styles.saveButton} />
+          <Button title="סגור" type="outline" onPress={toggleVATModal} style={styles.cancelButton}/>
             <Text style={{fontWeight: 'bold', fontSize: 14, direction: 'rtl',marginTop:5,textAlign:'center'}}> מחירים לאחר שינוי יוצגו בירוק</Text>
             <FlatList
               data={expenses}
@@ -359,7 +377,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
-    width: '80%',
+    width: '90%',
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
@@ -397,6 +415,7 @@ const styles = StyleSheet.create({
     width: '100%',
     color:'black',
   },
+  
   simulationResultContainer: {
     marginTop: 10,
     width: '100%',
@@ -421,4 +440,30 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
   },
+  dropdownContainer:{
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    
+  }
+});
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 4,
+    color: 'black',
+    paddingRight: 30,
+  },
+  inputAndroid: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30,
+  },
+  
 });
