@@ -15,7 +15,8 @@ const getMonthName = (monthIndex) => {
   ];
   return monthNames[monthIndex];
 };
-
+const prime = 6.0;
+const index= 1.0;
 export default function SimulationsScreen() {
   const { user } = useAuthentication();
   const [expenses, setExpenses] = useState([]);
@@ -25,7 +26,6 @@ export default function SimulationsScreen() {
   const [currentCPI, setCurrentCPI] = useState('');
   const [simulatedCPI, setSimulatedCPI] = useState('');
   const [debts, setDebts] = useState(0);
-  const [modalMonthVisible, setModalMonthVisible] = useState(false);
 
   const [loans, setLoans] = useState([]);
   const [simulatedLoans, setSimulatedLoans] = useState([]);
@@ -94,23 +94,106 @@ export default function SimulationsScreen() {
     fetchLoans();
   }, [user,isModalVisible]);
 
-  const calculateNewMonthlyPay = (loan, newRate) => {
-    const principal = loan.totalAmount;
-    const monthlyRate = newRate / 100 / 12;  
-    const numMonths = loan.numMonths;
-  
-    const newMonthlyPay = principal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -numMonths));
-    return newMonthlyPay.toFixed(2);
-  };
+  const calculateRepayment = (principal, rate, monthsCount, loanType, repaymentMethod, newprimeadd, startDate) => {
+    const principalAmount = parseFloat(principal);
+    const numberOfMonths = parseInt(monthsCount);
+    const currentDate = new Date();
+    const loanStartDate = new Date(startDate);
 
-  const simulateInterestRateChange = () => {
-    const updatedLoans = loans.map((loan) => ({
-      ...loan,
-      newMonthlyPay: calculateNewMonthlyPay(loan, parseFloat(newInterestRate)),
-    }));
-    setSimulatedLoans(updatedLoans);
-    setIsModalVisible(true);
-  };
+    
+    const monthsPaid = Math.floor((currentDate - loanStartDate) / (1000 * 60 * 60 * 24 * 30));
+    const remainingMonths = numberOfMonths - monthsPaid;
+
+   
+    if (remainingMonths <= 0) {
+        return { monthlyRepayment: 0, schedule: [] ,remainingMonths :0};
+    }
+
+   
+    let remainingPrincipal = principalAmount;
+
+    if (repaymentMethod === 'spitzer') {
+       
+        const effectiveRate = (parseFloat(rate) + prime + parseFloat(newprimeadd)) / 100 / 12;
+
+        const originalMonthlyRepayment = principalAmount * (effectiveRate * Math.pow(1 + effectiveRate, numberOfMonths)) / (Math.pow(1 + effectiveRate, numberOfMonths) - 1);
+
+        for (let i = 0; i < monthsPaid; i++) {
+            const interestPaid = remainingPrincipal * effectiveRate;
+            const principalPaid = originalMonthlyRepayment - interestPaid;
+            remainingPrincipal -= principalPaid;
+        }
+    }
+
+    let monthlyRepayment = 0;
+    const schedule = [];
+    const effectiveRate = (parseFloat(rate) + prime + parseFloat(newprimeadd)) / 100 / 12;
+
+    if (repaymentMethod === 'spitzer') {
+        monthlyRepayment = remainingPrincipal * (effectiveRate * Math.pow(1 + effectiveRate, remainingMonths)) / (Math.pow(1 + effectiveRate, remainingMonths) - 1);
+
+        for (let i = monthsPaid; i < monthsPaid+remainingMonths; i++) {
+            const interestPaid = remainingPrincipal * effectiveRate;
+            const principalPaid = monthlyRepayment - interestPaid;
+            remainingPrincipal -= principalPaid;
+            schedule.push({
+                month: i + 1,
+                monthlyRepayment: monthlyRepayment.toFixed(2),
+                principalPaid: principalPaid.toFixed(2),
+                interestPaid: interestPaid.toFixed(2),
+                remainingPrincipal: remainingPrincipal.toFixed(2)
+            });
+        }
+    } else if (repaymentMethod === 'equal_principal') {
+        const principalPayment = remainingPrincipal / remainingMonths;
+
+        for (let i = monthsPaid; i < monthsPaid+remainingMonths; i++) {
+            const interestPayment = remainingPrincipal * effectiveRate;
+            monthlyRepayment = principalPayment + interestPayment;
+            remainingPrincipal -= principalPayment;
+            schedule.push({
+                month: i + 1,
+                monthlyRepayment: monthlyRepayment.toFixed(2),
+                principalPaid: principalPayment.toFixed(2),
+                interestPaid: interestPayment.toFixed(2),
+                remainingPrincipal: remainingPrincipal.toFixed(2)
+            });
+           
+        }
+    }
+    
+
+    return {
+        monthlyRepayment: monthlyRepayment.toFixed(2),
+        schedule: schedule,
+        remainingMonths: remainingMonths
+    };
+};
+
+const simulateInterestRateChange = () => {
+  const updatedLoans = loans.map((loan) => {
+      const { monthlyRepayment, schedule ,remainingMonths} = calculateRepayment(
+          loan.totalAmount,
+          loan.primeRateAdjustment,
+          loan.numMonths,
+          loan.loanType, 
+          loan.repaymentMethod,
+          newInterestRate,
+          loan.startDate
+      );
+
+      return {
+          ...loan,
+          newMonthlyPay: monthlyRepayment, 
+          paymentSchedule: schedule, 
+          remainingMonths: remainingMonths    
+      };
+  });
+
+  setSimulatedLoans(updatedLoans);
+  setIsModalVisible(true);
+};
+
 
   const handleMonthSelect = (monthIndex) => {
     setSelectedMonth(monthIndex);
@@ -148,26 +231,29 @@ export default function SimulationsScreen() {
       
     );
   };
-  const LoansComparison = ( neww, old ) => {
-    console.log('neww',neww);
-    console.log('old',old);
-    const result = old - neww;
-    console.log('result',result);
-    const textColor = result < 0 ? 'green' : 'red';
+  const LoansComparison = (newPayment, oldPayment,remainingMonths) => {
+    const result = oldPayment - newPayment;
+    const textColor = result > 0 ? 'green' : 'red';
     const formattedDebts = result < 0 ? Math.abs(result).toFixed(2) : result.toFixed(2);
-    console.log('formattedDebts', formattedDebts);
+    const total = remainingMonths * result;
     return (
-      <Text style={{fontWeight:'bold'}}>
-        {debts < 0 ? 'ירידה של ' : 'עליה של '}
-        <Text style={[styles.text, { color: textColor }]}>
-          {formattedDebts}₪
-        </Text>
       
-      </Text>
-
-        
-      );
+        <Text style={{ fontWeight: 'bold' }}>
+          {'\n'}
+          {result > 0 ? 'ירידה של ' : 'עליה של '}
+          <Text style={[styles.text, { color: textColor }]}>
+            כ{formattedDebts}₪  
+          </Text>
+          <Text> בתשלום החודשי {'\n'} </Text>
+          <Text> ושל </Text>
+          <Text style={[styles.text, { color: textColor }]}> כ{Math.abs(total).toFixed(2)}₪</Text>
+          <Text>  בסך הכל  </Text>
+          <Text> {'\n'} ביחס לתשלום החודשי הישן</Text>
+        </Text>
+     
+    );
   };
+  
   return (
     <View style={styles.container}>
       <View style={styles.textBox}>
@@ -191,33 +277,13 @@ export default function SimulationsScreen() {
           <MaterialCommunityIcons name="finance" size={30} color="#007BFF" />
         </TouchableOpacity>
         <TouchableOpacity onPress={toggleInterestRateModal} style={styles.button}>
-          <Text style={{fontSize: 30, marginBottom: 5,marginRight:5,color:'#007BFF'}}>סימולציית שינוי ריבית </Text>
+          <Text style={{fontSize: 30, marginBottom: 5,marginRight:5,color:'#007BFF'}}>סימולציית שינוי ריבית פריים</Text>
           <MaterialCommunityIcons name="trending-up" size={30} color="#007BFF" />
         </TouchableOpacity>
      </View>
       
       
-      <Modal
-        visible={modalMonthVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setModalMonthVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {Array.from({ length: 12 }, (_, i) => (
-              <TouchableOpacity
-                key={i}
-                style={styles.monthOption}
-                onPress={() => handleMonthSelect(i)}
-              >
-                <Text style={styles.monthText}>{getMonthName(i)}</Text>
-              </TouchableOpacity>
-            ))}
-            <Button title="סגור" onPress={() => setModalMonthVisible(false)} style={styles.cancelButton} />
-          </View>
-        </View>
-      </Modal>
+    
 
       <Modal
         visible={VATmodalVisible}
@@ -275,38 +341,69 @@ export default function SimulationsScreen() {
       </Modal>
 
       <Modal
-    visible={isModalVisible}
-    animationType="slide"
-    transparent={true}
-    onRequestClose={() => setIsModalVisible(false)}
-  >
-    <View style={styles.modalContainer}>
-      <View style={styles.modalContent}>
-        <Text>סימולציית שינוי ריבית</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="ריבית חדשה (%)"
-          keyboardType="numeric"
-          value={newInterestRate}
-          onChangeText={setNewInterestRate}
-        />
-        <Button title="חשב" onPress={simulateInterestRateChange} />
-        <Button title="סגור" onPress={toggleInterestRateModal} />
-        {simulatedLoans.length > 0 && (
-          <ScrollView style={styles.simulationResultContainer}>
-            {simulatedLoans.map((loan) => (
-              <View key={loan.id} style={styles.simulationResultItem}>
-                <Text style={{fontWeight:'bold',}}>{loan.name}</Text>
-                <Text>תשלום חודשי ישן: {loan.monthlyPay}₪</Text>
-                <Text>תשלום חודשי חדש: {loan.newMonthlyPay}₪</Text>
-                <Text>{LoansComparison(loan.newMonthlyPay,loan.monthlyPay)}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        )}
-      </View>
-    </View>
-  </Modal>
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text>סימולציית שינוי ריבית פריים</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="הזן תוספת לריבית פריים חדשה (%)"
+              keyboardType="numeric"
+              value={newInterestRate}
+              onChangeText={setNewInterestRate}
+              placeholderTextColor="black"
+
+            />
+            <Button title="חשב" onPress={() => {simulateInterestRateChange();  Keyboard.dismiss();}} />
+            <Button title="סגור" onPress={toggleInterestRateModal} />
+            {simulatedLoans.length > 0 && (
+              <ScrollView style={styles.simulationResultContainer}>
+                {simulatedLoans
+                  .filter((loan) => loan.loanType === 'prime')
+                  .map((loan) => (
+                    <View key={loan.id} style={styles.simulationResultItem}>
+                      <Text style={{ fontWeight: 'bold' }}>{loan.name}</Text>
+                      <Text>תשלום חודשי ישן: {loan.monthlyPay}₪</Text>
+                      <Text>תשלום חודשי חדש: {loan.newMonthlyPay}₪</Text>
+                      <Text style={{textAlign:'center'}}>{LoansComparison(loan.newMonthlyPay, loan.monthlyPay,loan.remainingMonths)}</Text>
+
+                      <Text style={{ marginBottom: 10,marginTop: 10  }} >לוח סילוקין:</Text>
+                      
+                        
+                        <View style={{ flexDirection: 'row-reverse',  marginBottom: 5 }}>
+                          <Text style={{ textAlign: 'center', fontWeight: 'bold', flex: 1 }}>חודש</Text>
+                          <Text style={{ textAlign: 'center', fontWeight: 'bold', flex: 2 }}>תשלום קרן</Text>
+                          <Text style={{ textAlign: 'center', fontWeight: 'bold', flex: 2 }}>תשלום ריבית</Text>
+                          <Text style={{ textAlign: 'center', fontWeight: 'bold', flex: 2 }}>תשלום כולל</Text>
+                          <Text style={{ textAlign: 'center', fontWeight: 'bold', flex: 2 }}>יתרה</Text>
+                        </View>
+
+                        
+                        {loan.paymentSchedule && loan.paymentSchedule.map((payment, index) => (
+                          <View key={index} style={{ flexDirection: 'row-reverse', marginBottom: 5 }}>
+                            <Text style={{ textAlign: 'center', flex: 1 }}> {payment.month}</Text>
+                            <Text style={{ textAlign: 'center', flex: 2 }}>{payment.principalPaid}₪</Text>
+                            <Text style={{ textAlign: 'center', flex: 2 }}>{payment.interestPaid}₪</Text>
+                            <Text style={{ textAlign: 'center', flex: 2 }}>{payment.monthlyRepayment}₪</Text>
+                            <Text style={{ textAlign: 'center', flex: 2 }}>{payment.remainingPrincipal}₪</Text>
+                          </View>
+                        ))}
+                      
+                  
+                      
+                    </View>
+                  ))}
+              </ScrollView>
+            )}
+
+
+          </View>
+        </View>
+      </Modal>
 
     <Text style={{fontWeight: 'bold', fontSize: 10, direction: 'rtl',textAlign:'center',marginTop:'auto'}}>
       הסימולטור הפיננסי מספק הערכה כללית של תשלומים עתידיים בהתבסס על הנתונים המוזנים,
