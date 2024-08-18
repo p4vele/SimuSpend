@@ -6,9 +6,16 @@ import { Button, Input } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { FontAwesome } from '@expo/vector-icons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import RNPickerSelect from 'react-native-picker-select';
 
 const db = getFirestore();
-
+const getMonthName = (monthIndex) => {
+  const monthNames = [
+    'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+    'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+  ];
+  return monthNames[monthIndex];
+};
 export default function CreditCardsScreen({ navigation }) {
   const { user } = useAuthentication();
   const [creditCards, setCreditCards] = useState([]);
@@ -22,7 +29,17 @@ export default function CreditCardsScreen({ navigation }) {
   const [isExpensesModalVisible, setIsExpensesModalVisible] = useState(false);
   const [creditCardExpenses, setCreditCardExpenses] = useState([]);
 
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
+  const filterExpensesByMonth = (expenses, month) => {
+    return expenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate.getMonth() === month;
+    });
+  };
+  const handleMonthSelect = (monthIndex) => {
+    setSelectedMonth(monthIndex);
+  };
   const fetchCreditCards = async () => {
     try {
       if (!user) {
@@ -54,8 +71,9 @@ export default function CreditCardsScreen({ navigation }) {
         const expensesData = expensesSnapshot.docs
           .map((doc) => ({ id: doc.id, ...doc.data() }))
           .filter((expense) => expense.creditCard === creditCardId);
-  
-        setCreditCardExpenses(expensesData);
+      
+        
+        setCreditCardExpenses(filterExpensesByMonth(expensesData,selectedMonth));
       }
     } catch (error) {
       console.error('Error fetching credit card expenses:', error);
@@ -65,9 +83,12 @@ export default function CreditCardsScreen({ navigation }) {
     const loadData = async () => {
       await fetchCreditCards();
     };
-
+    
     loadData();
   }, [user]);
+  useEffect(() => {
+    fetchCreditCardExpenses(selectedCreditCard,selectedMonth);
+  }, [selectedCreditCard,selectedMonth]);
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -168,7 +189,30 @@ export default function CreditCardsScreen({ navigation }) {
         <Modal visible={isExpensesModalVisible} animationType="slide" transparent={true}>
           <View style={styles.modalContainer}>
             <View style={[styles.modalContent, { width: '80%' }]}>
-              <Text style={styles.modalTitle}>הוצאות עבור כרטיס זה</Text>
+                
+              <Text style={styles.modalTitle}> הוצאות עבור כרטיס זה בחודש</Text>
+              <View style={styles.dropdownContainer}>
+                
+                <RNPickerSelect
+                  onValueChange={(value) => handleMonthSelect(value)}
+                  items={[
+                    { label: 'ינואר', value: 0 },
+                    { label: 'פברואר', value: 1 },
+                    { label: 'מרץ', value: 2 },
+                    { label: 'אפריל', value: 3 },
+                    { label: 'מאי', value: 4 },
+                    { label: 'יוני', value: 5 },
+                    { label: 'יולי', value: 6 },
+                    { label: 'אוגוסט', value: 7 },
+                    { label: 'ספטמבר', value: 8 },
+                    { label: 'אוקטובר', value: 9 },
+                    { label: 'נובמבר', value: 10 },
+                    { label: 'דצמבר', value: 11 }
+                  ]}
+                  value={selectedMonth}
+                  style={pickerSelectStyles}
+                />
+                </View>
               <FlatList
                 data={creditCardExpenses}
                 keyExtractor={(item) => item.id}
@@ -408,4 +452,30 @@ const styles = StyleSheet.create({
     direction:'rtl',
     marginBottom: 5,
  },
+ dropdownContainer:{
+  flexDirection: 'row-reverse',
+  justifyContent: 'center',
+  
+}
+});
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 4,
+    color: 'black',
+    paddingRight: 30,
+  },
+  inputAndroid: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30,
+  },
+  
 });
