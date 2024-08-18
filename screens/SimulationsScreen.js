@@ -16,7 +16,7 @@ const getMonthName = (monthIndex) => {
   return monthNames[monthIndex];
 };
 const prime = 6.0;
-const index= 1.0;
+const index= 107.80;
 export default function SimulationsScreen() {
   const { user } = useAuthentication();
   const [expenses, setExpenses] = useState([]);

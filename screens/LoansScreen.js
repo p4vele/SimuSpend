@@ -12,7 +12,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 
 const db = getFirestore();
 const prime = 6.0;
-const index= 1.0;
+const index= 107.80;
 export default function LoansScreen({ navigation }) {
   const { user } = useAuthentication();
   const [loans, setLoans] = useState([]);
