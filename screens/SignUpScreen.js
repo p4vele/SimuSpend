@@ -18,18 +18,18 @@ const SignUpScreen = ({ navigation }) => {
 
   function checkPassword(firstPassword, secondPassword) {
     if (firstPassword !== secondPassword) {
-      setValidationMessage('Passwords do not match');
+      setValidationMessage('סיסמאות לא תואמות');
     } else setValidationMessage('');
   }
 
   async function createAccount() {
     email === '' || password === '' || confirmPassword === ''
-      ? setValidationMessage('Required field missing')
+      ? setValidationMessage('שדה מבוקש חסר')
       : '';
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      navigation.navigate('Sign In');
+      navigation.navigate('התחברות');
     } catch (error) {
       setValidationMessage(error.message);
     }
