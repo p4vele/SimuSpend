@@ -112,18 +112,30 @@ const fetchExpenses = async () => {
       const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
       const numPaymentsInt = parseInt(numPayments, 10) || 0;
       const amountPerPayment = parseFloat(newAmount) / numPaymentsInt || 0;
-      
-      for (let i = 0; i < numPaymentsInt; i++) {
-        const paymentDate = new Date(date);
-        paymentDate.setMonth(paymentDate.getMonth() + i);
-  
+      if (numPaymentsInt > 0){
+        for (let i = 0; i < numPaymentsInt; i++) {
+          const paymentDate = new Date(date);
+          paymentDate.setMonth(paymentDate.getMonth() + i);
+    
+          await addDoc(expensesCollection, {
+            description: newExpense,
+            amount: amountPerPayment,
+            date: paymentDate.toISOString().split('T')[0],
+            numPayments: numPaymentsInt,
+            type: selectedExpenseType,
+            comment: `${i + 1} / ${numPaymentsInt} תשלומים`,
+            creditCard: selectedCreditCard,
+          });
+        }
+      }
+      else{
         await addDoc(expensesCollection, {
           description: newExpense,
-          amount: amountPerPayment,
-          date: paymentDate.toISOString().split('T')[0],
-          numPayments: numPaymentsInt,
+          amount: parseFloat(newAmount) || 0,
+          date,
+          numPayments: parseInt(numPayments, 10) || 0,
           type: selectedExpenseType,
-          comment: `${i + 1} / ${numPaymentsInt} תשלומים`,
+          comment,
           creditCard: selectedCreditCard,
         });
       }

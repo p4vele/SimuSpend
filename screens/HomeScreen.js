@@ -5,7 +5,7 @@ import { Button, Input } from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { getAuth, signOut } from 'firebase/auth';
-import { getFirestore, collection, addDoc, getDocs, deleteDoc,doc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc,doc,setDoc } from 'firebase/firestore';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { PieChart } from 'react-native-chart-kit';
 import Swiper from 'react-native-swiper';
@@ -109,6 +109,9 @@ export default function HomeScreen({ navigation }) {
   };
   useEffect(() => {
     if (user) {
+      setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+      });
       fetchExpenses();
       fetchIncomes();
       fetchCreditCards();
@@ -202,18 +205,30 @@ export default function HomeScreen({ navigation }) {
       const expensesCollection = collection(db, 'users', user?.uid, 'expenses');
       const numPaymentsInt = parseInt(numPayments, 10) || 0;
       const amountPerPayment = parseFloat(newAmount) / numPaymentsInt || 0;
-  
-      for (let i = 0; i < numPaymentsInt; i++) {
-        const paymentDate = new Date(date);
-        paymentDate.setMonth(paymentDate.getMonth() + i);
-  
+      if (numPaymentsInt > 0){
+        for (let i = 0; i < numPaymentsInt; i++) {
+          const paymentDate = new Date(date);
+          paymentDate.setMonth(paymentDate.getMonth() + i);
+    
+          await addDoc(expensesCollection, {
+            description: newExpense,
+            amount: amountPerPayment,
+            date: paymentDate.toISOString().split('T')[0],
+            numPayments: numPaymentsInt,
+            type: selectedExpenseType,
+            comment: ` ${numPaymentsInt} מתוך ${i + 1} תשלומים`,
+            creditCard: selectedCreditCard,
+          });
+        }
+      }
+      else{
         await addDoc(expensesCollection, {
           description: newExpense,
-          amount: amountPerPayment,
-          date: paymentDate.toISOString().split('T')[0],
-          numPayments: numPaymentsInt,
+          amount: parseFloat(newAmount) || 0,
+          date,
+          numPayments: parseInt(numPayments, 10) || 0,
           type: selectedExpenseType,
-          comment: ` ${numPaymentsInt} מתוך ${i + 1} תשלומים`,
+          comment,
           creditCard: selectedCreditCard,
         });
       }
@@ -293,6 +308,7 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.notificationsWrapper}>
         <Text style={styles.title}>התראות ותזכורות</Text>
+        {relevantNotifications && relevantNotifications.length > 0 ? (
         <ScrollView horizontal style={styles.notificationsContainer}>
         {relevantNotifications.map((notification) => (
           <View key={notification.id} style={styles.notificationItem}>
@@ -305,11 +321,19 @@ export default function HomeScreen({ navigation }) {
           </View>
         ))}
         </ScrollView>
+      ) : (
+        <TouchableOpacity style={styles.noNotifications} onPress={() => navigation.navigate('תזכורות')}>
+          <Text style={styles.title2}>לא קיימות התראות חדשות </Text>
+          <Text style={styles.title3}>לחץ עליי למעבר למסך התראות</Text>
+        </TouchableOpacity>
+      )}
       </View>
 
       <Swiper style={styles.wrapper} showsButtons={false} loop={false} >
         <View style={styles.slide}>
           <Text style={styles.title}>הוצאות</Text>
+          {expenses && expenses.length > 0 ? (
+          <>
           <PieChart
             data={expenseChartData}
             width={350}
@@ -329,7 +353,26 @@ export default function HomeScreen({ navigation }) {
                 <FontAwesome name="upload" size={20} color="#007BFF" />
                 <Text style={styles.addButtonText}>יבא מאקסל</Text>
               </TouchableOpacity>
+              
           </View>
+              </>
+            ) : (
+              
+              <View style={styles.noDataContainer}>
+                <Text style={styles.noDataText}>לא קיימות הוצאות</Text>
+                <TouchableOpacity onPress={toggleModal} style={styles.addButton2}>
+                  <Text style={styles.addButtonText}>הוסף הוצאה</Text>
+                  <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.addButton2} onPress={() => navigation.navigate('יבא מאקסל')}>
+                  <Text style={styles.addButtonText}>יבא מאקסל</Text>
+                  <FontAwesome name="upload" size={20} color="#007BFF" />
+                </TouchableOpacity>
+              </View>
+              
+              
+            )}
           <FlatList
             data={expenses}
             renderItem={({ item }) => (
@@ -351,6 +394,8 @@ export default function HomeScreen({ navigation }) {
 
         <View style={styles.slide}>
           <Text style={styles.title}>הכנסות</Text>
+          {incomes && incomes.length > 0 ? (
+          <>
           <PieChart
             data={incomeChartData}
             width={350}
@@ -365,6 +410,17 @@ export default function HomeScreen({ navigation }) {
             <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
             <Text style={styles.addButtonText}>הוסף הכנסה</Text>
           </TouchableOpacity>
+          </>
+            ) : (
+              <View style={styles.noDataContainer}>
+                <Text style={styles.noDataText}>לא קיימות הכנסות</Text>
+                <TouchableOpacity onPress={toggleIncomeModal} style={styles.addButton2}>
+                  <Text style={styles.addButtonText}>הוסף הכנסה</Text>
+                  <MaterialCommunityIcons name="plus-circle" size={24} color="#007BFF" />
+                  
+                </TouchableOpacity>
+              </View>
+            )}
           <FlatList
             data={incomes}
             renderItem={({ item }) => (
@@ -382,7 +438,9 @@ export default function HomeScreen({ navigation }) {
             )}
             keyExtractor={(item) => item.id}
           />
+          
         </View>
+        
         
       </Swiper>
       
@@ -520,6 +578,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop:35,
   },
+  noDataContainer: {
+    flex: 1,
+    padding: 10,
+    alignItems: 'center',
+    
+  },
   signOutButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -580,8 +644,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  title2: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  title3: {
+    fontSize: 10,
+    marginBottom: 10,
+    textAlign: 'center',
+
+  },
   addButton: {
     flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  addButton2: {
+    marginTop: 10,
+    flexDirection: 'column-reverse',
     alignItems: 'center',
     marginBottom: 10,
   },
@@ -683,6 +765,15 @@ const styles = StyleSheet.create({
     
     marginBottom: 10,
   },
+  noNotifications:{
+    display: 'flex',
+  },
+  noDataText:{
+    marginTop: 10,
+    fontSize: 26,
+    textAlign: 'center',
+
+  }
 });
 
 const chartConfig = {
