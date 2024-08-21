@@ -57,7 +57,35 @@ export default function HomeScreen({ navigation }) {
     const year = d.getFullYear();
     return `${day}-${month}-${year}`;
   };
-  
+  const dateView = (date) => {
+    const isoDateRegexFull = /^\d{4}-\d{2}-\d{2}$/;
+
+    const isoDateRegexShort = /^\d{2}-\d{2}-\d{2}$/;
+
+    const shortDateRegex = /^\d{2}-\d{1,2}-\d{1,2}$/;
+
+    const reformatDate = (year, month, day) => {
+        const fullYear = year.length === 2 ? `20${year}` : year;
+        return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${fullYear}`;
+    };
+
+    if (isoDateRegexFull.test(date)) {
+        const [year, month, day] = date.split('-');
+        return reformatDate(year, month, day);
+    }
+
+    if (isoDateRegexShort.test(date)) {
+        const [year, month, day] = date.split('-');
+        return reformatDate(year, month, day);
+    }
+
+    if (shortDateRegex.test(date)) {
+        const [year, month, day] = date.split('-');
+        return reformatDate(year, month.padStart(2, '0'), day.padStart(2, '0'));
+    }
+
+    return date;
+  }
   const fetchNotifications = async () => {
     try {
       const notificationsCollection = collection(db, 'users', user?.uid, 'notifications');
@@ -381,7 +409,7 @@ export default function HomeScreen({ navigation }) {
                 <TouchableOpacity onPress={() => deleteExpense(item.id)} style={styles.deleteButton}>
                   <Icon name="times" size={15} color="red" />
                 </TouchableOpacity>
-                <Text style={styles.expenseDate}>{formatDate(item.date)}</Text> 
+                <Text style={styles.expenseDate}>{dateView(item.date)}</Text> 
                 <Text style={styles.expenseDescription}>{item.description}</Text>
                 <Text style={styles.expenseAmount}>{item.amount} ₪</Text>
                 

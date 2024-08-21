@@ -171,12 +171,42 @@ const fetchExpenses = async () => {
   };
 
   const formatDate = (date) => {
+    
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
     return `${day}-${month}-${year}`;
   };
+  const dateView = (date) => {
+    const isoDateRegexFull = /^\d{4}-\d{2}-\d{2}$/;
+
+    const isoDateRegexShort = /^\d{2}-\d{2}-\d{2}$/;
+
+    const shortDateRegex = /^\d{2}-\d{1,2}-\d{1,2}$/;
+
+    const reformatDate = (year, month, day) => {
+        const fullYear = year.length === 2 ? `20${year}` : year;
+        return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${fullYear}`;
+    };
+
+    if (isoDateRegexFull.test(date)) {
+        const [year, month, day] = date.split('-');
+        return reformatDate(year, month, day);
+    }
+
+    if (isoDateRegexShort.test(date)) {
+        const [year, month, day] = date.split('-');
+        return reformatDate(year, month, day);
+    }
+
+    if (shortDateRegex.test(date)) {
+        const [year, month, day] = date.split('-');
+        return reformatDate(year, month.padStart(2, '0'), day.padStart(2, '0'));
+    }
+
+    return date;
+  }
 
   const [isVisible, setIsVisible] = useState(false);
   
@@ -204,7 +234,7 @@ const fetchExpenses = async () => {
           <Text></Text>
           <Text style={{fontSize:12}}>לחץ על על מנת לבחור חודש אחר</Text> 
       </TouchableOpacity>
-      <Text style={{fontSize:26,marginTop:10,marginBottom:10,textAlign:'center'}}>סה"כ הוצאות לחודש {getMonthName(selectedMonth)}: {totalExpenses}₪</Text>
+      <Text style={{fontSize:26,marginTop:10,marginBottom:10,textAlign:'center'}}>סה"כ הוצאות לחודש {getMonthName(selectedMonth)}: {totalExpenses.toFixed(2)}₪</Text>
       
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={toggleModal}>
@@ -332,7 +362,7 @@ const fetchExpenses = async () => {
               <Text style={{ fontWeight: 'bold' }}>{item.description}</Text>
               <Text>{item.comment}</Text>
             </View>
-            <Text>{formatDate(item.date)}</Text>
+            <Text>{dateView(item.date)}</Text>
             <TouchableOpacity onPress={() => deleteExpense(item.id)}>
               <Icon name="times" size={15} color="red" />
             </TouchableOpacity>
