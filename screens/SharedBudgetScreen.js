@@ -190,7 +190,7 @@ const SharedBudgetScreen = () => {
   const renderGroups = ({ item }) => (
     <TouchableOpacity style={styles.groupItem} onPress={() => navigation.navigate('GroupDetails', { groupId: item.id })}>
       <Text style={styles.groupName}>{item.name}</Text>
-      <Text style={styles.groupMembers}>{item.members.length} members</Text>
+      <Text style={styles.groupMembers}>{item.members.length} שותפים</Text>
     </TouchableOpacity>
   );
   const renderInvitationItem = ({ item }) => (
@@ -377,6 +377,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginVertical: 5,
     borderRadius: 10,
+    alignItems: 'center',
   },
   groupName: {
     fontSize: 18,

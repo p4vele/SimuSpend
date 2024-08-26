@@ -207,7 +207,12 @@ const simulateInterestRateChange = () => {
 
   const renderItem = ({ item }) => (
     <View style={styles.expenseItem}>
-      <Text style={styles.expenseText}>{item.description}</Text>
+      <Text style={styles.expenseText}
+         numberOfLines={2} 
+         ellipsizeMode="tail"
+        >
+          {item.description}
+        </Text>
       <Text style={styles.expenseAmount}>{item.amount}₪</Text>
       {item.newPriceWithSimulatedVAT !== undefined && (
         <Text style={styles.newPriceText}>{item.newPriceWithSimulatedVAT.toFixed(2)}₪</Text>
@@ -263,7 +268,6 @@ const simulateInterestRateChange = () => {
         <Text> שונים כמו: </Text>
         <Text> שינויים בריבית פריים </Text>
         <Text> שינויים במעמ </Text>
-        <Text> הוצאות גדולות</Text>
         <Text></Text>
         
       </View>
@@ -328,11 +332,13 @@ const simulateInterestRateChange = () => {
           <Button title="חשב" onPress={calculateFinancialIndicators} style={styles.saveButton} />
           <Button title="סגור" type="outline" onPress={toggleVATModal} style={styles.cancelButton}/>
             <Text style={{fontWeight: 'bold', fontSize: 14, direction: 'rtl',marginTop:5,textAlign:'center'}}> מחירים לאחר שינוי יוצגו בירוק</Text>
+            <View style={{ maxHeight: 200 }}> 
             <FlatList
               data={expenses}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
             />
+            </View>
               <Text  style={{fontWeight: 'bold', fontSize: 26, direction: 'rtl',textAlign:'center'}}>
                 <ExpensesComparison debts={debts} selectedMonth={selectedMonth} />
               </Text>
@@ -360,6 +366,8 @@ const simulateInterestRateChange = () => {
             />
             <Button title="חשב" onPress={() => {simulateInterestRateChange();  Keyboard.dismiss();}} />
             <Button title="סגור" onPress={toggleInterestRateModal} />
+            <View style={styles.loan}> 
+
             {simulatedLoans.length > 0 && (
               <ScrollView style={styles.simulationResultContainer}>
                 {simulatedLoans
@@ -399,7 +407,7 @@ const simulateInterestRateChange = () => {
                   ))}
               </ScrollView>
             )}
-
+            </View>
 
           </View>
         </View>
@@ -453,19 +461,42 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   expenseItem: {
-    padding: 15,
+    flex: 1,
+    margin: 5,
     borderBottomWidth: 1,
     borderColor: '#ccc',
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    
   },
   expenseText: {
     fontSize: 16,
+    flexGrow: 2,          
+    flexShrink: 1,         
+    flexBasis: 'auto', 
+    textAlign:'center',
+    direction:'rtl',
   },
   expenseAmount: {
     fontSize: 16,
     fontWeight: 'bold',
     color: 'red',
+    flexGrow: 0,           
+    flexShrink: 0,         
+    width: 80,        
+    textAlign:'center',
+     
+  },
+  newPriceText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'green',
+    flexGrow: 0,           
+    flexShrink: 0,         
+    width: 80,        
+    textAlign:'center',
+     
   },
   modalContainer: {
     flex: 1,
@@ -498,11 +529,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   
-  newPriceText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'green',
-  },
+  
   input: {
     height: 40,
     borderColor: 'black',
@@ -541,6 +568,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     
+  },
+  loan: {
+    width: '100%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+    maxHeight: '73%',
   }
 });
 const pickerSelectStyles = StyleSheet.create({

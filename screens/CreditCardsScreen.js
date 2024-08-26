@@ -139,7 +139,35 @@ export default function CreditCardsScreen({ navigation }) {
     const totalExpenses = expensesForCard.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
     return totalExpenses;
   };
-  
+  const dateView = (date) => {
+    const isoDateRegexFull = /^\d{4}-\d{2}-\d{2}$/;
+
+    const isoDateRegexShort = /^\d{2}-\d{2}-\d{2}$/;
+
+    const shortDateRegex = /^\d{2}-\d{1,2}-\d{1,2}$/;
+
+    const reformatDate = (year, month, day) => {
+        const fullYear = year.length === 2 ? `20${year}` : year;
+        return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${fullYear}`;
+    };
+
+    if (isoDateRegexFull.test(date)) {
+        const [year, month, day] = date.split('-');
+        return reformatDate(year, month, day);
+    }
+
+    if (isoDateRegexShort.test(date)) {
+        const [year, month, day] = date.split('-');
+        return reformatDate(year, month, day);
+    }
+
+    if (shortDateRegex.test(date)) {
+        const [year, month, day] = date.split('-');
+        return reformatDate(year, month.padStart(2, '0'), day.padStart(2, '0'));
+    }
+
+    return date;
+  }
   return (
       <View style={styles.container}>
         <View style={styles.textBox}>
@@ -216,15 +244,20 @@ export default function CreditCardsScreen({ navigation }) {
               <FlatList
                 data={creditCardExpenses}
                 keyExtractor={(item) => item.id}
-                numColumns={1}
                 renderItem={({ item }) => (
                   <View key={item.id} style={styles.expenseGridItem}>
-                    
-                      
-                        <Text style={styles.entryDescription}>{item.date}</Text>
-                        <Text style={styles.entryDescription}>{item.description}</Text>
+                    <Text style={styles.entryDate}>{dateView(item.date)}</Text>
+                    <View  style={styles.expenseGridItem2}>
+                    <Text 
+                      style={styles.entryDescription} 
+                      numberOfLines={2} 
+                      ellipsizeMode="tail"
+                    >
+                      {item.description}
+                    </Text>
+                      <Text style={styles.entryComment}>{item.comment}</Text>
+                    </View>
                         <Text style={styles.entryAmount}>{item.amount}</Text>
-                        <Text style={styles.entryComment}>{item.comment}</Text>
 
                   </View>
                 )}
@@ -394,18 +427,20 @@ const styles = StyleSheet.create({
     right: 20,
   },
   expenseGridContainer: {
-    paddingHorizontal: 10,
-    paddingVertical: 15,
+  
     
+  },
+  expenseGridItem2: {
+    flex: 3,  
+    flexDirection: 'column',
   },
   expenseGridItem: {
     direction: 'rtl',
     flex: 1,
-    flexDirection: 'column',
+    flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
     margin: 5,
-    padding: 10,
     borderRadius: 10,
     elevation: 5,
     borderWidth: 1,
@@ -414,19 +449,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   amountContainer: {
+    flex:1,
     flexDirection: 'row',
     textAlign: 'center',
   },
   entryComment:{
+    flex:1,
+
     direction: 'ltr',
     textAlign: 'center',
     
   },
+  entryDate:{
+    flexShrink:1,
+    marginLeft:5,
+  },
   entryDescription: {
+    flex:2,
+
     fontWeight: 'bold',
     textAlign: 'center',
   },
   entryAmount: {
+    flex:1,
+
     textAlign: 'center',
     color:'red',
   },
