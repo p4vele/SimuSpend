@@ -1,7 +1,7 @@
 
 
 # SimuSpend
-
+SimuSpend is a financial management application. It manages and tracks user expenses and income. The app offers options for managing shared budgets, provides tips and insights on expenses through a chatbot, financial simulations, and reminders for upcoming expenses such as birthdays, insurance, vehicle registration fees, and more.
 
 ![Abstract](BS-SE-24-227-2-8/abstract.jpg)
 ![poster1](BS-SE-24-227-2-8/poster1.png)
